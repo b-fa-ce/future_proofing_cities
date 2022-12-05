@@ -1,5 +1,7 @@
 ## Cities to look at:
 
+coordinates from: https://geolist.org
+
 
 **Paris:**
 
