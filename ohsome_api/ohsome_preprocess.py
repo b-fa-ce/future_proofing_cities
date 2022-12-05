@@ -23,3 +23,6 @@ def get_data(bbox):
         print(f"Gathered data for landuse = {element}")
         print("-" *30)
     return result
+
+
+print('')
