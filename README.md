@@ -5,7 +5,7 @@ coordinates from: https://geolist.org
 
 **Paris:**
 
-|Map corner	latitude	longitude|
+|Map corner|	latitude	|longitude|
 |-------------|:---------:|----------:|
 |Upper-left|	49.31392°|	1.64568°|
 |Center |48.85341°|2.3488°|
@@ -23,6 +23,7 @@ coordinates from: https://geolist.org
 **London:**
 
 |Map corner	|latitude	|longitude|
+|-------------|:---------:|----------:|
 |Upper-left	|51.94405° |	-0.82887°|
 |Center:	|51.50853° |	-0.12574°|
 |Lower-right |	51.0688°|	0.57738°|
@@ -31,6 +32,7 @@ coordinates from: https://geolist.org
 **Brussels:**
 
 |Map corner|	latitude|	longitude|
+|-------------|:---------:|----------:|
 |Upper-left	|51.29226°|	3.64566°|
 |Center:|	50.85045°|	4.34878°|
 |Lower-right:	|50.40442°|	5.05191°|
