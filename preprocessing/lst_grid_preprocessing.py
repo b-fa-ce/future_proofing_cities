@@ -7,13 +7,20 @@ import pyproj
 from shapely.geometry import Polygon
 
 
-from preprocessing.lst_preprocessing import import_city_data, convert_to_Celsius, CITY_BOUNDING_BOXES
+from preprocessing.lst_preprocessing import import_city_data, \
+    convert_to_Celsius, CITY_BOUNDING_BOXES
 
+import os
+
+# input and output file paths
+INPUT_PATH = os.path.join('..','raw_data')
+OUTPUT_PATH = os.path.join('..','processed_data')
 
 
 def swath_to_grid(lst_data: np.array,
+                  height_data: np.array,
                   lon_data: np.array,
-                  lat_data: np.array):#,height_data :np.array):
+                  lat_data: np.array):
     """
     converts satellite swath to regular grid
     based upon: https://git.earthdata.nasa.gov/projects/LPDUR/repos/tutorial-ecostress/browse/ECOSTRESS_Tutorial.ipynb
@@ -76,13 +83,13 @@ def swath_to_grid(lst_data: np.array,
     # Perform K-D Tree nearest neighbor resampling (swath 2 grid conversion)
     lst_grid = kdt.get_sample_from_neighbour_info('nn', area_def.shape, lst_data, index,\
                                                   outdex, index_array, fill_value=0)
-
-    # ToDo: height_data
+    height_grid = kdt.get_sample_from_neighbour_info('nn', area_def.shape, height_data, index,\
+                                                  outdex, index_array, fill_value=0)
 
     # Define the geotransform: lower_left latitude, longitude, pixel_size
     geo_transform = [area_def.area_extent[0], area_def.area_extent[1], pixel_size]
 
-    return lst_grid, geo_transform
+    return lst_grid, height_grid, geo_transform
 
 
 
@@ -102,10 +109,10 @@ def get_pixel_coords(row_col: list, geo_transform: list) -> list:
     current_col = geo_transform[0] + pixel_size * (col - 1)
     next_col = current_col + pixel_size
 
-    upper_left = [current_row, current_col]
-    lower_left = [next_row, current_col]
-    lower_right = [next_row, next_col]
-    upper_right = [current_row, next_col]
+    upper_left = [current_col, current_row]
+    lower_left = [current_col, next_row]
+    lower_right = [next_col, next_row]
+    upper_right = [next_col, current_row]
 
     return [upper_left, lower_left, lower_right, upper_right]
 
@@ -127,13 +134,15 @@ def coord_bounds_to_pixels(geo_transform, bounds):
 
 
 
-def build_gdf(city):
+def create_gdf(city):
     """
-    build GeoDataFrame
+    build GeoDataFrame for specific city contained in CITY_BOUNDING_BOXES
     """
     lst_data, lat_data, lon_data, height_data = import_city_data(city)
 
-    lst_data_grid, geo_transform = swath_to_grid(lst_data, lon_data, lat_data)
+    # gridded data: LST, height, geo_transform
+    lst_data_grid, height_data_grid, geo_transform = \
+        swath_to_grid(lst_data, height_data, lon_data, lat_data)
 
     # pixel bounds
     lon_bounds = coord_bounds_to_pixels(geo_transform, CITY_BOUNDING_BOXES[city])[:2]
@@ -145,24 +154,61 @@ def build_gdf(city):
 
     # slice data
     lst_slice = lst_data_grid[lat_bounds[0]:lat_bounds[1], lon_bounds[0]:lon_bounds[1]]
-    # height data
+    height_slice = height_data_grid[lat_bounds[0]:lat_bounds[1], lon_bounds[0]:lon_bounds[1]]
 
     # corner coordinates
     corners = np.array([[get_pixel_coords((row, col), geo_transform) \
         for col in lon_range] for row in lat_range])
 
+
     # flatten
-    lst_flat = lst_slice.reshape(np.multiply(*lst_slice.shape), )
+    lst_flat = lst_slice.reshape(np.multiply(*lst_slice.shape),)
+    height_flat = height_slice.reshape(np.multiply(*height_slice.shape),)
     corners_flat = corners.reshape(np.multiply(*corners.shape[:2]),*corners.shape[2:])
+
+    # convert LST to degree Celcius
+    lst_flat = convert_to_Celsius(lst_flat)
+
+    # difference to average values
+    lst_diff = lst_flat - np.average(lst_flat[lst_flat!=-1000])
+    height_diff = height_flat - np.average(height_flat[lst_flat!=-1000])
 
     # build shapely polygons
     polygons = [Polygon(single_corners) for single_corners in corners_flat]
 
+    # individual corners
+    ul_corners = [[list(corner)] for corner in corners_flat[:,0,:]]
+    ll_corners = [[list(corner)] for corner in corners_flat[:,1,:]]
+    lr_corners = [[list(corner)] for corner in corners_flat[:,2,:]]
+    ur_corners = [[list(corner)] for corner in corners_flat[:,3,:]]
+
     # GeoDataFrame
-    gpd = geopandas.GeoDataFrame(lst_flat.T, geometry = polygons)
-    gpd.columns = ['LST', 'geometry']
+    gpd = geopandas.GeoDataFrame({'LST': lst_flat.T,
+                                 'elevation': height_flat.T,
+                                 'LST_diff': lst_diff,
+                                 'elevation_diff': height_diff,
+                                 'ul_corner': ul_corners,
+                                 'll_corner': ll_corners,
+                                 'lr_corner': lr_corners,
+                                 'ur_corner': ur_corners},
+                                  geometry = polygons, crs = "EPSG:4326")
 
     return gpd
 
 
-# ToDo: convert to C, height, average, save to csv
+def save_gdf_to_csv(city: str):
+    """
+    saves DataFrames to csv files
+    """
+
+    gdf = create_gdf(city)
+
+    out_path = os.path.join(OUTPUT_PATH,f'{city}.csv')
+    gdf.to_csv(out_path, index=False)
+    print(f"Saved data for {city} to {os.path.join(OUTPUT_PATH,f'{city}.csv')}")
+
+
+if __name__ == '__main__':
+    for city in CITY_BOUNDING_BOXES:
+        print(f"Processing data for {city}...")
+        save_gdf_to_csv(city)
