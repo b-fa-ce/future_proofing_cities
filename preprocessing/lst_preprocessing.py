@@ -11,7 +11,7 @@ import os
 INPUT_PATH = os.path.join('..','raw_data')
 OUTPUT_PATH = os.path.join('..','processed_data')
 
-# lon, lat city bounding boxes
+# lon, lat city bounding boxes, format: Lon, Lat
 CITY_BOUNDING_BOXES = {'Paris': [[2.264216,2.42172],[48.813898,48.900502]],
                   'Berlin': [[13.313794,13.471299],[52.475607,52.55571]],
                   'London': [[-0.216408,-0.058904],[51.469149,51.551072]],
@@ -30,7 +30,7 @@ def import_city_data(city_name: str)-> tuple:
     """
     returns np.arrays of lst, lat, lon, height data
     for a given city where city_name folder in
-    raw_data/city_name
+    raw_data/city_name/
     """
 
     folder_path = os.path.join(INPUT_PATH, city_name,'')
@@ -64,7 +64,7 @@ def convert_to_Celsius(lst_data):
     SCALE_FACTOR = 0.02
     KELVIN_CELCIUS = -273.15
 
-    # missing values, i.e. zero values
+    # missing values, i.e. zero values, mapped to -1000
     lst_data[lst_data == 0] = (-1000 - KELVIN_CELCIUS) * 1/SCALE_FACTOR
 
     return (SCALE_FACTOR * lst_data) + KELVIN_CELCIUS
@@ -103,24 +103,24 @@ def convert2df_coord(lst_data: np.array, lat_data: np.array, lon_data: np.array,
     # remove missing values -> leave for now
     # lst_geo = lst_geo[lst_geo[:,0]!=-1000]
 
-    # latitude
+    # latitude boundaries
     lst_geo = lst_geo[(lst_geo[:,1]>= lat_lim[0]) & (lst_geo[:,1]<= lat_lim[1])]
 
-    # longitude
+    # longitude boundaries
     lst_geo = lst_geo[(lst_geo[:,2]>= lon_lim[0]) & (lst_geo[:,2]<= lon_lim[1])]
 
 
 
     # convert to Pandas DataFrame
 
-    df = geopandas.GeoDataFrame(lst_geo)
+    df = pd.DataFrame(lst_geo)
     df.columns = ['LST','Latitude', 'Longitude', 'height', 'LST_Difference', 'height_Difference']
 
     return df
 
 
 
-def save_as_csv(city_name: str):
+def build_df_save2csv(city_name: str):
     """
     saves DataFrames to csv files
     """
@@ -134,4 +134,5 @@ def save_as_csv(city_name: str):
 
 if __name__ == '__main__':
     for city in CITY_BOUNDING_BOXES:
-        save_as_csv(city)
+        print(f"Processing data for {city}")
+        build_df_save2csv(city)
