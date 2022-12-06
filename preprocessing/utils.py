@@ -129,7 +129,7 @@ def save_as_csv(city_name: str):
         *CITY_BOUNDING_BOXES[city_name])
 
     out_path = os.path.join(OUTPUT_PATH,f'{city_name}.csv')
-    df.to_csv(out_path)
+    df.to_csv(out_path, index=False)
 
 
 if __name__ == '__main__':
