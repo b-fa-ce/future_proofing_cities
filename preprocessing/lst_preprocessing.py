@@ -37,10 +37,10 @@ def import_city_data(city_name: str)-> tuple:
     lst_path = glob.glob(folder_path + 'ECOSTRESS_L2*')[0]
     geo_path = glob.glob(folder_path + 'ECOSTRESS_L1*')[0]
 
-    lst = np.array(import_ECOSTRESS_data(lst_path)['SDS']['LST'])
-    lat = np.array(import_ECOSTRESS_data(geo_path)['Geolocation']['latitude'])
-    lon = np.array(import_ECOSTRESS_data(geo_path)['Geolocation']['longitude'])
-    height = np.array(import_ECOSTRESS_data(geo_path)['Geolocation']['height'])
+    lst = np.array(import_ECOSTRESS_data(lst_path)['SDS']['LST'], dtype=np.float32)
+    lat = np.array(import_ECOSTRESS_data(geo_path)['Geolocation']['latitude'], dtype=np.float32)
+    lon = np.array(import_ECOSTRESS_data(geo_path)['Geolocation']['longitude'], dtype=np.float32)
+    height = np.array(import_ECOSTRESS_data(geo_path)['Geolocation']['height'], dtype=np.float32)
 
     return lst, lat, lon, height
 
