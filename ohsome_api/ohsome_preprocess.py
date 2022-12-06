@@ -1,28 +1,34 @@
 import requests
 import pandas as pd
+from ohsome import OhsomeClient
+import matplotlib.pyplot as plt
 
 #https://wiki.openstreetmap.org/wiki/Key:landuse
-def get_data(bbox):
+def get_data(bbox:list, time:str, filter:str = 'landuse=*') -> pd.DataFrame:
     '''
-    Returns a pd DataFrame with the types of landuse for a given city. The input is the name of the city and the associated BBox
+    Returns a stacked pd DataFrame with the types of landuse for multiple bboxes.
+    The inputs are:
+    bbox: is a list of the coordinates of the bbox,
+    time: time which we are interested in (format: YY-MM-DD),
+    filter: what filter we want to look at most probably landuse=*
     '''
-    landuse = ['commercial', 'construction', 'education', 'industrial', 'residential',
-               'retail', 'institutional', 'aquaculture', 'allotments', 'farmland',
-               'farmyard', 'flowerbed', 'forest', 'greenhouse_horticulture',
-               'meadow', 'orchard', 'plant_nursery', 'vineyard', 'basin', 'salt_pond',
-               'brownfield', 'cemetery', 'depot', 'garages', 'grass', 'greenfield',
-               'landfill', 'military', 'port', 'quarry', 'railway', 'recreation_ground',
-               'religious', 'village_green', 'winter_sports']
-    URL = 'https://api.ohsome.org/v1/elements/area'
-    result = {}
-    for element in landuse:
-        data = {"bboxes": bbox, "format": "json", "time": "2022-08-01", "filter": f"landuse={element}"}
-        response = requests.post(URL, data=data)
-        result[element] = response.json().get('result')[0].get('value')
-        print("-" * 30)
-        print(f"Gathered data for landuse = {element}")
-        print("-" *30)
-    return result
+    client = OhsomeClient(log=False)
+    groupByKey = 'landuse'
+    response = client.elements.count.groupByBoundary.groupByTag.post(bboxes=bbox, time=time, filter=filter, groupByKey=groupByKey)
+    return response.as_dataframe()
 
 
-print('')
+def get_map(bbox:list, time:str, filter:str):
+    '''
+    Returns both the Geopandas dataframe (response_df) and the map of an area based on the landuse
+    The inputs are:
+    bbox: is a list of the coordinates of the bbox,
+    time: time which we are interested in (format: YY-MM-DD),
+    filter: what filter we want to look at, here landuse=*
+    '''
+    client = OhsomeClient(log=False)
+    properties = 'tags'
+    response = client.elements.geometry.post(bboxes= bbox, time=time, filter= filter, properties=properties)
+    response_df = response.as_dataframe()
+    fig, ax = plt.subplots(1,1, figsize = (20,20))
+    return response_df, response_df.plot(column = 'landuse', ax = ax, legend= True)
