@@ -30,16 +30,22 @@ def get_data_for_map(bbox:list, time:str, filter:str):
     properties = 'tags'
     response = client.elements.geometry.post(bboxes= bbox, time=time, filter= filter, properties=properties)
     response_df = response.as_dataframe()
-    fig, ax = plt.subplots(1,1, figsize = (20,20))
-    return response_df, response_df.plot(column = 'landuse', ax = ax, legend= True)
+    return response_df
 
 
 def clean_data_for_map(df):
     '''
     The input for this method is the dataframe from the get_map_and_data function and returns a cleaned DataFrame
     All of the columns a part from 'geometry' and 'landuse' will be dropped as the levels of NaNs are very high (min is 87&)
+    Two entries have landuse = 'unknown' or 'mixed', these will be dropped
+    The 42 different types of landuse will also be grouped into categories
     '''
-    return df[['geometry', 'landuse']]
+    df = df[['geometry', 'landuse']]
+    indexes_to_drop = df.index[df['landuse'].isin(['unknown', 'mixed'])].tolist()
+    df = df.drop(indexes_to_drop, axis = 0, inplace = True).copy()
+    return df
+
+
 
 def get_map(df):
     fig, ax = plt.subplots(1,1, figsize = (20,20))
