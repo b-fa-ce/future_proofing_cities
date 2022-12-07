@@ -302,7 +302,7 @@ def export_gdf(city: str):
     gdf['ll_corner'] = gdf['ll_corner'].apply(lambda x: str(x))
     gdf['lr_corner'] = gdf['lr_corner'].apply(lambda x: str(x))
     gdf['ur_corner'] = gdf['ur_corner'].apply(lambda x: str(x))
-    gdf['bb'] = gdf['ur_corner'].apply(lambda x: str(x))
+    gdf['bb'] = gdf['bb'].apply(lambda x: str(x))
 
     # construct gdf again
     gdf_export = geopandas.GeoDataFrame(gdf.drop(columns='geometry'),
@@ -325,7 +325,7 @@ def export_gdf(city: str):
     df['ll_corner'] = df['ll_corner'].apply(lambda x: str(x))
     df['lr_corner'] = df['lr_corner'].apply(lambda x: str(x))
     df['ur_corner'] = df['ur_corner'].apply(lambda x: str(x))
-    df['bb'] = df['ur_corner'].apply(lambda x: str(x))
+    df['bb'] = df['bb'].apply(lambda x: str(x))
 
     # export path
     out_path_csv = os.path.join(out_path,f'{city}.csv')
