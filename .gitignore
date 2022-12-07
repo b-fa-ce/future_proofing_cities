@@ -1,2 +1,12 @@
 raw_data/
 notebooks/
+
+preprocessing.egg-info/
+__pycache__
+*.ipynb_checkpoints
+.DS_Store
+
+# notebooks
+notebooks_gridding.ipynb
+ohsome_api/test.ipynb
+ohsome_api/paris.ipynb

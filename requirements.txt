@@ -57,6 +57,7 @@ nest-asyncio==1.5.6
 notebook==6.5.2
 notebook_shim==0.2.2
 numpy==1.23.5
+ohsome==0.1.0
 packaging==21.3
 pandas==1.5.2
 pandocfilters==1.5.0
@@ -104,9 +105,13 @@ websocket-client==1.4.2
 wrapt==1.14.1
 
 
-# project specific packages
+# satellite data
 mpmath
 Shapely==1.8.4
 geopandas
 h5py
 contextily
+
+# gridding
+pyresample
+pyproj
