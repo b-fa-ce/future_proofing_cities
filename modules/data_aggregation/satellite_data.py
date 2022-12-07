@@ -248,7 +248,7 @@ def create_gdf(city):
     ur_corners = [[list(corner)] for corner in corners_flat[:,3,:]]
 
     # all corners in clockwise direction
-    all_corners = [corner.tolist()[::-1] for corner in corners_flat]
+    all_corners = [corner.tolist() for corner in corners_flat]
 
     # GeoDataFrame
     gdf = geopandas.GeoDataFrame({'LST': lst_flat.T,
