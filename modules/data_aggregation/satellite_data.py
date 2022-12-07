@@ -42,6 +42,7 @@ def import_city_data(city_name: str)-> tuple:
     """
 
     folder_path = os.path.join(INPUT_PATH, city_name,'')
+
     lst_path = glob.glob(folder_path + 'ECOSTRESS_L2*')[0]
     geo_path = glob.glob(folder_path + 'ECOSTRESS_L1*')[0]
 
@@ -246,6 +247,9 @@ def create_gdf(city):
     lr_corners = [[list(corner)] for corner in corners_flat[:,2,:]]
     ur_corners = [[list(corner)] for corner in corners_flat[:,3,:]]
 
+    # all corners in clockwise direction
+    all_corners = [corner.tolist()[::-1] for corner in corners_flat]
+
     # GeoDataFrame
     gdf = geopandas.GeoDataFrame({'LST': lst_flat.T,
                                  'ele': height_flat.T,
@@ -254,7 +258,8 @@ def create_gdf(city):
                                  'ul_corner': ul_corners,
                                  'll_corner': ll_corners,
                                  'lr_corner': lr_corners,
-                                 'ur_corner': ur_corners},
+                                 'ur_corner': ur_corners,
+                                 'bb': all_corners},
                                   geometry = polygons, crs = "EPSG:4326")
 
     # for data transfer convenience create simple DataFrame
@@ -265,7 +270,8 @@ def create_gdf(city):
                         'ul_corner': ul_corners,
                         'll_corner': ll_corners,
                         'lr_corner': lr_corners,
-                        'ur_corner': ur_corners})
+                        'ur_corner': ur_corners,
+                        'bb': all_corners})
 
     return gdf, df
 
@@ -296,6 +302,7 @@ def export_gdf(city: str):
     gdf['ll_corner'] = gdf['ll_corner'].apply(lambda x: str(x))
     gdf['lr_corner'] = gdf['lr_corner'].apply(lambda x: str(x))
     gdf['ur_corner'] = gdf['ur_corner'].apply(lambda x: str(x))
+    gdf['bb'] = gdf['ur_corner'].apply(lambda x: str(x))
 
     # construct gdf again
     gdf_export = geopandas.GeoDataFrame(gdf.drop(columns='geometry'),
@@ -318,6 +325,7 @@ def export_gdf(city: str):
     df['ll_corner'] = df['ll_corner'].apply(lambda x: str(x))
     df['lr_corner'] = df['lr_corner'].apply(lambda x: str(x))
     df['ur_corner'] = df['ur_corner'].apply(lambda x: str(x))
+    df['bb'] = df['ur_corner'].apply(lambda x: str(x))
 
     # export path
     out_path_csv = os.path.join(out_path,f'{city}.csv')
