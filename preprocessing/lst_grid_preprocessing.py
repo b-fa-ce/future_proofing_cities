@@ -196,19 +196,46 @@ def create_gdf(city):
     return gpd
 
 
-def save_gdf_to_csv(city: str):
+def export_gdf_to_shp(city: str):
     """
-    saves DataFrames to csv files
+    saves DataFrame for a city to shp file
     """
-
+    # create gdf
     gdf = create_gdf(city)
 
-    out_path = os.path.join(OUTPUT_PATH,f'{city}.csv')
-    gdf.to_csv(out_path, index=False)
-    print(f"Saved data for {city} to {os.path.join(OUTPUT_PATH,f'{city}.csv')}")
+    # convert lists to strs
+    gdf['ul_corner'] = gdf['ul_corner'].apply(lambda x: str(x))
+    gdf['ll_corner'] = gdf['ll_corner'].apply(lambda x: str(x))
+    gdf['lr_corner'] = gdf['lr_corner'].apply(lambda x: str(x))
+    gdf['ur_corner'] = gdf['ur_corner'].apply(lambda x: str(x))
+
+    # construct gdf again
+    gdf_export = geopandas.GeoDataFrame(gdf.drop(columns='geometry'),
+                                        geometry=gdf['geometry'],
+                                        crs="EPSG:4326")
+
+    # export path
+    out_path = os.path.join(OUTPUT_PATH, city,f'{city}.shp')
+
+    # exporting
+    gdf_export.to_file(out_path, index=False)
+    print(f"Saved data for {city} to {os.path.join(OUTPUT_PATH, city, f'{city}.shp')}")
+
+
+def import_gdf_from_shp(city: str):
+    """
+    imports DataFrame for a city from shp file
+    """
+    # import path
+    in_path = os.path.join(OUTPUT_PATH, city,f'{city}.shp')
+
+    return geopandas.read_file(in_path)
 
 
 if __name__ == '__main__':
     for city in CITY_BOUNDING_BOXES:
         print(f"Processing data for {city}...")
-        save_gdf_to_csv(city)
+        export_gdf_to_shp(city)
+
+
+# ToDO: refactor wtih lst_preprocessing.py
