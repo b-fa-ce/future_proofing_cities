@@ -105,9 +105,13 @@ websocket-client==1.4.2
 wrapt==1.14.1
 
 
-# project specific packages
+# satellite data
 mpmath
 Shapely==1.8.4
 geopandas
 h5py
 contextily
+
+# gridding
+pyresample
+pyproj
