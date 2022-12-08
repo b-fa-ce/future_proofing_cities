@@ -1,92 +1,53 @@
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder
+from tensorflow.keras import layers
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.callbacks import EarlyStopping
+
+
 from sklearn.pipeline import make_pipeline
 from sklearn.compose import ColumnTransformer, make_column_selector
 from sklearn.model_selection import cross_val_score, GridSearchCV
 
-from tensorflow.keras import layers
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.callbacks import EarlyStopping
+from modules.data_aggregation.params import CITY_BOUNDING_BOXES
+from modules.ml_logic.utils import slice_picture_coords
 
 
-import pandas as pd
-import numpy as np
+# ToDO: perform slicing of full image of 100x100 = 10000 slices -> where best to do it?
 
 
-## basic structure
-
-# features: av building height/pix, building density/pix,
-# landcover types per pix (12 categories), elevation (difference to mean elevation)/pix
-# target: difference to mean temp/pix
-
-
-# preprocessing
-def create_features_preprocessor() -> ColumnTransformer:
+def initialize_model() -> Model:
     """
-    create prepocessor for input features
-    1. av building height -> StandardScaler() (Normal distribution) (, MinMaxScaler())
-    2. density: fine
-    3. elevation: MinMaxScaler() -> look at distribution
-    4. landcover: OHE
-    and returns preprocessed numpy array
+    initialise Neural Network
     """
+    model = Sequential()
 
-    # instantiate scalers
-    standard = StandardScaler()
-    minmax = MinMaxScaler()
+    ### First Convolution & MaxPooling
+    model.add(layers.Conv2D(8, (4,4), input_shape=X_train.shape[1:].as_list(), padding = 'same', activation = 'relu'))
+    model.add(layers.MaxPool2D(pool_size = (2,2)))
 
-    # instantiate ohe
-    ohe = OneHotEncoder(handle_unknown='ignore')
+    ### Second Convolution & MaxPooling
+    model.add(layers.Conv2D(16, (3,3), activation = 'relu'))
+    model.add(layers.MaxPool2D(pool_size = (2,2)))
 
+    ### Flattening
+    model.add(layers.Flatten())
 
-    # COMBINED PREPROCESSOR
-    preprocessor = ColumnTransformer(
-        [
-            ("building_height_scaler", standard, ['building_height']),
-            ("elevation_scaler", minmax, ['ele']),
-            ("landcover_ohe", ohe, ['categories']),
-        ],
-        n_jobs=-1,
-    )
+    ### One Fully Connected layer - "Fully Connected" is equivalent to saying "Dense"
+    model.add(layers.Dense(10, activation = 'relu'))
 
-    return preprocessor
+    ### Last layer - Classification Layer with 10 outputs corresponding to 10 digits
+    model.add(layers.Dense(10, activation = 'softmax'))
 
+    ### Model compilation
+    model.compile(loss='categorical_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
 
-def train_preprocess_features(X: pd.DataFrame):
-    """
-    returns fitted preprocessor
-    use on X_train only
-    """
-    # instantiate preproecessor
-    preprocessor = create_features_preprocessor()
-    preprocessor.fit(X)
-
-    return preprocessor
-
-def preprocess_features(X: pd.DataFrame, preprocessor) -> np.array:
-    """
-    returns preprocessed features
-    use on X_train, X_val and X_test separately
-    """
-
-    return preprocessor.transform(X)
+    return model
 
 
-if __name__ == '__main__':
-    preprocessor = create_features_preprocessor()
-    X_processed = preprocessor.fit_transform(X)
+def grid_search_params():
+    pass
 
-
-
-
-# features:
-# 1. av building height -> StandardScaler() (Normal distribution) (, MinMaxScaler())
-# 2. density: fine
-# 3. elevation: MinMaxScaler() -> look at distribution
-# 4. landcover: OHE
-
-# target: fine
-
-
+def compile_model():
+    pass
 
 # clustering and finding (next to) nearest neighbours on geographical data
 # cluster analysis
