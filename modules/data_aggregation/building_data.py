@@ -228,7 +228,7 @@ def get_building_coverage(buildings, clip, pixel):
 
 def get_landuse_coverage(landuses, clip, pixel):
     """
-    Same as above but for landuse
+    Same as above but for landuse OR somethign fancier
     """
     separate_areas = []
     for landuse_coords in landuses:
