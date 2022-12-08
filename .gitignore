@@ -1,7 +1,9 @@
 raw_data/
+notebooks/
 ohsome_api/test.ipynb
 ohsome_api/paris.ipynb
 test.ipynb
+data/
 
 preprocessing.egg-info/
 __pycache__
