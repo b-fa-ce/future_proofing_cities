@@ -48,7 +48,10 @@ def slice_picture_coords(full_coords: list, scaling_factor: int, overlap_percent
     return tiles_coords
 
 
-def get_all_sub_coords(full_df: pd.DataFrame, num_px_lon = 10, num_px_lat = 6) -> pd.DataFrame:
+def get_all_sub_coords(full_df: pd.DataFrame,
+                       num_px_lon: int = 10,
+                       num_px_lat: int = 6,
+                       overlap_percent: int = 0) -> list:
     """
     description:
     returns the sub image according to the smaller
@@ -57,7 +60,7 @@ def get_all_sub_coords(full_df: pd.DataFrame, num_px_lon = 10, num_px_lat = 6) -
     input:
     full_df: full original dataframe
     tiles_coords: coordinates of all subtiles from slice_picture_coords()
-    image_number: number of image to return
+    image_number: number pixels in longitude and latitude
 
     output:
     returns the image_number-th subtile dataframe
@@ -72,12 +75,12 @@ def get_all_sub_coords(full_df: pd.DataFrame, num_px_lon = 10, num_px_lat = 6) -
     lr_import = full_df.lr_corner.apply(literal_eval)
 
     # divide ul_corner into lists of lat and lon
-    ul_lat = np.array([ul[0] for ul in ul_import])[:,0]
-    ul_lon = np.array([ul[0] for ul in ul_import])[:,1]
+    ul_lon = np.array([ul[0] for ul in ul_import])[:,0]
+    ul_lat = np.array([ul[0] for ul in ul_import])[:,1]
 
     # divide lr_corner into lists of lat and lon
-    lr_lat = np.array([lr[0] for lr in lr_import])[:,0]
-    lr_lon = np.array([lr[0] for lr in lr_import])[:,1]
+    lr_lon = np.array([lr[0] for lr in lr_import])[:,0]
+    lr_lat = np.array([lr[0] for lr in lr_import])[:,1]
 
     total_num_tiles = int(len(full_df)/(num_px_lon* num_px_lat))
 
@@ -97,7 +100,7 @@ def get_all_sub_coords(full_df: pd.DataFrame, num_px_lon = 10, num_px_lat = 6) -
         slice_bound_lat = [ul_lat[i], ul_lat[i] + step_lat]
         slice_bound_lon = [ul_lon[i], ul_lon[i] + step_lon]
 
-        tiles_coords.append([slice_bound_lat, slice_bound_lon])
+        tiles_coords.append([slice_bound_lon,slice_bound_lat])
 
 
     return tiles_coords
@@ -119,19 +122,24 @@ def get_sub_tile(full_df: pd.DataFrame, tiles_coords: list, image_number: int) -
     """
     # convert imported upper left corner str into list
     ul_import = full_df.ul_corner.apply(literal_eval)
+    lr_import = full_df.lr_corner.apply(literal_eval)
 
     # divide ul_corner into lists of lat and lon
-    ul_lat = np.array([ul[0] for ul in ul_import])[:,0]
-    ul_lon = np.array([ul[0] for ul in ul_import])[:,1]
+    ul_lon = np.array([ul[0] for ul in ul_import])[:,0]
+    ul_lat = np.array([ul[0] for ul in ul_import])[:,1]
+
+    # divide lr_corner into lists of lat and lon
+    lr_lon = np.array([lr[0] for lr in lr_import])[:,0]
+    lr_lat = np.array([lr[0] for lr in lr_import])[:,1]
 
     # divide slice_coords into lists of lat and lon
-    slice_bound_lat = tiles_coords[image_number][0]
-    slice_bound_lon = tiles_coords[image_number][1]
+    slice_bound_lon = tiles_coords[image_number][0]
+    slice_bound_lat = tiles_coords[image_number][1]
 
-    sub_df = full_df[(ul_lat >= slice_bound_lat[0]) &\
-                           ((ul_lat < slice_bound_lat[1])) &\
-                           ((ul_lon >= slice_bound_lon[0])) &\
-                           ((ul_lon < slice_bound_lon[1]))]
+    sub_df = full_df[((ul_lon >= slice_bound_lon[0])) &\
+                     ((ul_lon < slice_bound_lon[1])) &\
+                     (ul_lat >= slice_bound_lat[0]) &\
+                     ((lr_lat < slice_bound_lat[1]))]
 
     return sub_df
 
