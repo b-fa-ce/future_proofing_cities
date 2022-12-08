@@ -116,14 +116,14 @@ def plot_whole_json_set(json_set):
     plt.show;
 
 def receive_building_data(jsons):
-  buildings = []
-  for json in jsons.values():
-    for building in json['features']:
-      height = building['properties']['height']
-      coords = building['geometry']['coordinates'][0]
-      building_data = [height, coords]
-      buildings.append(building_data)
-  return buildings
+    buildings = []
+    for json in jsons.values():
+        for building in json['features']:
+            height = building['properties']['height']
+            coords = building['geometry']['coordinates'][0]
+            building_data = [height, coords]
+            buildings.append(building_data)
+    return buildings
 
 
 def polyarea(x,y):
