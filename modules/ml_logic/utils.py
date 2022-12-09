@@ -73,3 +73,38 @@ def get_sub_tile(full_df: pd.DataFrame, tiles_coords: list, image_number: int) -
                            ((ul_lon < slice_bound_lon[1]))]
 
     return sub_df
+
+
+# Compute all possible permutations
+def get_permutations(ndim_list):
+    """
+    returns all permutations of sublist elements
+    """
+    if len(ndim_list) == 1:
+        res = ndim_list
+    else:
+        if len(ndim_list) == 2:
+            res = [[i, j] for i in ndim_list[0] for j in ndim_list[1]]
+        elif len(ndim_list) == 3:
+            res = [[i, j, k] for i in ndim_list[0] for j in ndim_list[1] for k in ndim_list[2]]
+        else:
+            res = [[i, j, k, l] for i in ndim_list[0] for j in ndim_list[1] for k in ndim_list[2] for l in ndim_list[3]]
+    return res
+
+
+def get_correct_odering(list):
+    """
+    returns correct order of coords for
+    Polygon
+    """
+    p1, p2 = list[2:4]
+    list[2], list[3] = p2, p1
+
+    return list
+
+def get_corners(slice_coords: list):
+    """
+    returs all 4 corners of all tiles
+    """
+
+    return [get_correct_odering(get_permutations(coords)) for coords in slice_coords]
