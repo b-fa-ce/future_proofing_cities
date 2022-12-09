@@ -31,7 +31,7 @@ def Haversine(lat1,lon1,lat2,lon2, **kwarg):
     return round(d,4)
 
 
-def geodesic_point_buffer(lat, lon, km):
+def geodesic_point_buffer(lat, lon, m):
     proj_wgs84 = pyproj.Proj('+proj=longlat +datum=WGS84')
     # Azimuthal equidistant projection
     aeqd_proj = '+proj=aeqd +lat_0={lat} +lon_0={lon} +x_0=0 +y_0=0'
@@ -39,24 +39,32 @@ def geodesic_point_buffer(lat, lon, km):
         pyproj.transform,
         pyproj.Proj(aeqd_proj.format(lat=lat, lon=lon)),
         proj_wgs84)
-    buf = Point(0, 0).buffer(km * 1000)  # distance in metres
+    buf = Point(0, 0).buffer(m)  # distance in metres
     b = transform(project, buf).exterior.coords[:]
     north_dot = max(b,key=itemgetter(0))
     south_dot = min(b,key=itemgetter(0))
     east_dot = max(b,key=itemgetter(1))
     west_dot = min(b,key=itemgetter(1))
 
-    return north_dot, south_dot, east_dot, west_dot
+    return north_dot, east_dot, south_dot, west_dot
+
+def get_centre_point(pixel):
+    lon_half = abs((pixel[0][0] - pixel[2][0]) / 2)
+    lat_half = abs((pixel[0][1] - pixel[1][1]) / 2)
+    lon_middle = pixel[0][0] + lon_half
+    lat_middle = pixel[0][1] + lat_half
+    return [lon_middle, lat_middle]
 
 
 def geodesic_point_buffer_vector(lat, lon, km):
-    north_dot, south_dot, east_dot, west_dot = geodesic_point_buffer(lat,lon,km)
+    north_dot, east_dot, south_dot, west_dot = geodesic_point_buffer(lat,lon,km)
     north_vector = np.array(north_dot) - np.array([lat, lon])
     south_vector = np.array(south_dot) - np.array([lat, lon])
     east_vector = np.array(east_dot) - np.array([lat, lon])
     west_vector = np.array(west_dot) - np.array([lat, lon])
 
-    return north_vector, south_vector, east_vector, west_vector
+    # return north_vector, east_vector, south_vector, west_vector
+    return north_vector[0], east_vector[1]
 
 def new_pixel(in_pixel, dist):
     """
@@ -64,21 +72,16 @@ def new_pixel(in_pixel, dist):
     padding: distance
     """
     # ll
-    lon, lat = in_pixel[0]
-    north_vector, south_vector, east_vector, west_vector = geodesic_point_buffer_vector(lat, lon, dist)
-    ll_new = np.array(in_pixel[0]) + np.array(south_vector) + np.array(west_vector)
+    mid_point = get_centre_point(in_pixel)
+    lat, lon = mid_point[0], mid_point[1]
+    lat_dif, lon_dif = geodesic_point_buffer_vector(lat, lon, dist)
+    ll_new = [in_pixel[0][0] - lat_dif, in_pixel[0][1] - lon_dif]
     # ul
-    lon, lat = in_pixel[1]
-    north_vector, south_vector, east_vector, west_vector = geodesic_point_buffer_vector(lat, lon, dist)
-    ul_new = np.array(in_pixel[1]) + north_vector + west_vector
+    ul_new = [in_pixel[0][0] + lat_dif, in_pixel[0][1] - lon_dif]
     # ur
-    lon, lat = in_pixel[2]
-    north_vector, south_vector, east_vector, west_vector = geodesic_point_buffer_vector(lat, lon, dist)
-    ur_new = np.array(in_pixel[2]) + north_vector + east_vector
+    ur_new = [in_pixel[0][0] + lat_dif, in_pixel[0][1] + lon_dif]
     # lr
-    lon, lat = in_pixel[3]
-    north_vector, south_vector, east_vector, west_vector = geodesic_point_buffer_vector(lat, lon, dist)
-    lr_new = np.array(in_pixel[3]) + south_vector + east_vector
+    lr_new = [in_pixel[0][0] - lat_dif, in_pixel[0][1] + lon_dif]
     return [ll_new, ul_new, ur_new, lr_new]
 
 
