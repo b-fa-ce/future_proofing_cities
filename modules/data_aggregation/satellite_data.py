@@ -14,17 +14,12 @@ from pyresample import kd_tree as kdt
 import pyproj
 from shapely.geometry import Polygon
 
+# lon, lat city bounding boxes, format: Lon, Lat
+from modules.data_aggregation.params import CITY_BOUNDING_BOXES
+
 # input and output file paths
 INPUT_PATH = os.path.join('..','..','data','raw_data')
 OUTPUT_PATH = os.path.join('..','..','data','processed_data')
-
-
-# lon, lat city bounding boxes, format: Lon, Lat
-CITY_BOUNDING_BOXES = {'Paris': [[2.264216,2.42172],[48.813898,48.900502]],
-                  'Berlin': [[13.313794,13.471299],[52.475607,52.55571]],
-                  'London': [[-0.216408,-0.058904],[51.469149,51.551072]],
-                  'Brussels': [[4.288857,4.446361],[50.808751,50.891855]]
-}
 
 
 def import_ECOSTRESS_data(file_path: str):
