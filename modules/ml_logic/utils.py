@@ -48,7 +48,8 @@ def slice_picture_coords(full_coords: list, scaling_factor: int, overlap_percent
     return tiles_coords
 
 
-def get_all_sub_coords(full_df: pd.DataFrame,
+def get_all_sub_coords(city: str,
+                       full_df: pd.DataFrame,
                        num_px_lon: int = 10,
                        num_px_lat: int = 6,
                        overlap_percent: int = 0) -> list:
@@ -82,25 +83,43 @@ def get_all_sub_coords(full_df: pd.DataFrame,
     lr_lon = np.array([lr[0] for lr in lr_import])[:,0]
     lr_lat = np.array([lr[0] for lr in lr_import])[:,1]
 
-    total_num_tiles = int(len(full_df)/(num_px_lon* num_px_lat))
+    total_num_tiles = int(len(full_df)/(num_px_lon * num_px_lat))
+
+    # set max longitude and latitude dimensions from original image
+    bb_lon_min, bb_lon_max = CITY_BOUNDING_BOXES[city][0][::-1]
+    bb_lat_min, bb_lat_max = CITY_BOUNDING_BOXES[city][1][::-1]
+
+    max_lon = int((bb_lon_max- bb_lon_min)/num_px_lon)
+    max_lat = int((bb_lat_max- bb_lat_min)/num_px_lat)
 
     tiles_coords = []
 
-    for i in range(total_num_tiles):
+    print(max_lon, max_lat)
 
-        # get pixel size
-        lat_size, lon_size = lr_lat[i] - ul_lat[i], lr_lon[i] - ul_lon[i]
+    for i in range(0, max_lon, num_px_lon):
 
-        # step size
-        step_lat = num_px_lat * lat_size
-        step_lon = num_px_lon * lon_size
+        for j in range(0, max_lat, num_px_lat, num_px_lat):
 
+            # get pixel size
+            lat_size, lon_size = lr_lat[j] - ul_lat[j], lr_lon[i] - ul_lon[i]
 
-        # divide slice_coords into lists of lat and lon
-        slice_bound_lat = [ul_lat[i], ul_lat[i] + step_lat]
-        slice_bound_lon = [ul_lon[i], ul_lon[i] + step_lon]
+            print(lat_size, lon_size)
 
-        tiles_coords.append([slice_bound_lon,slice_bound_lat])
+            # step size
+            step_lat = num_px_lat * lat_size
+            step_lon = num_px_lon * lon_size
+
+            # overlap in lon, lat
+            lat_overlap = overlap_percent/100 * step_lat
+            lon_overlap = overlap_percent/100 * step_lon
+
+            print(lon_overlap, lat_overlap)
+
+            # divide slice_coords into lists of lat and lon
+            slice_bound_lat = [ul_lat[j] - lat_overlap, ul_lat[j] + step_lat - lat_overlap]
+            slice_bound_lon = [ul_lon[i] - lon_overlap, ul_lon[i] + step_lon - lon_overlap]
+
+            tiles_coords.append([slice_bound_lon,slice_bound_lat])
 
 
     return tiles_coords
