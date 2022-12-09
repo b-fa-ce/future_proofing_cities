@@ -115,3 +115,6 @@ contextily
 # gridding
 pyresample
 pyproj
+
+# learning
+tensorflow
