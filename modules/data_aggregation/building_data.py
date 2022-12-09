@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import mpmath as mp
 import requests
@@ -136,7 +137,9 @@ def visualise_buildings_pixel(pixels, buildings, number, clip):
 
 def visualise_landuse_pixel(pixels, landuse_polygons, number, clip):
     """
-    Same as above but for landuse
+    Combines functions so when given a list of pixels and the index,
+    it plots out that pixel, all landuse polygons, and gives a percentage coverage.
+    For testing/verifying only.
     """
     chosen_pixel = pixels[number]
     matching_buidlings = get_pixel_polygons(landuse_polygons, chosen_pixel)
@@ -147,7 +150,8 @@ def visualise_landuse_pixel(pixels, landuse_polygons, number, clip):
 
 def get_pixel_polygons(polygons, pixel):
     """
-    Gets the polygons that have a point inside a given pixel
+    Returns the polygons that have a point inside a given pixel, mostly just for
+    testing and visualising the logic.
     """
     local_polygons = []
     for polygon in polygons:
@@ -159,7 +163,8 @@ def get_pixel_polygons(polygons, pixel):
 
 def get_pixel_buildings(buildings, pixel):
     """
-    Same as above but for buildings
+    Returns the buildings that have a point inside a given pixel, mostly just for
+    testing and visualising the logic.
     """
     local_buildings = []
     for building in buildings:
@@ -185,7 +190,7 @@ def get_clipped_polygon_area(polygon_coords, clip, pixel):
 
 def is_polygon_inside(polygon_coords, pixel):
     """
-    Checks if polygon is entirely inside pixel
+    Checks if all points of a polygon are inside a pixel
     """
     inside=True
     for coord in polygon_coords:
@@ -209,7 +214,9 @@ def is_polygon_point_inside(polygon_coords, pixel):
 
 def get_building_coverage(buildings, clip, pixel):
     """
-    Gets the percentage coverage of buildings in a pixel
+    Gets the percentage coverage of buildings in a pixel, used for looping over
+    all the pixels. Requires buildings to be saved from the return_building_data
+    function defined above, and an instantiated clipper class
     """
     separate_areas = []
     for building in buildings:
@@ -228,7 +235,9 @@ def get_building_coverage(buildings, clip, pixel):
 
 def get_landuse_coverage(landuses, clip, pixel):
     """
-    Same as above but for landuse
+    Returns the percentage of a landuse category for each pixel. Needs to be passed
+    an instantiated clipping class, a series of the polygons from one landuse category,
+    and one pixel. Used for iterating over each pixel.
     """
     separate_areas = []
     for landuse_coords in landuses:
@@ -243,3 +252,38 @@ def get_landuse_coverage(landuses, clip, pixel):
     pixel_area = pixel_poly.area
     prop_area_covered = area_covered/pixel_area
     return prop_area_covered
+
+def get_building_coverage_and_height(buildings, clip, pixel):
+    """
+    Gets the percentage coverage of buildings in a pixel,
+    alongside the average height
+    """
+    separate_areas = []
+    heights = []
+    for building in buildings:
+        building_coords = building[1]
+        if is_polygon_inside(building_coords, pixel):
+            pgon = Polygon(building_coords)
+            separate_areas.append(pgon.area)
+            heights.append(building[0])
+        elif is_polygon_point_inside(building_coords, pixel):
+            area = get_clipped_polygon_area(building_coords, clip, pixel)
+            separate_areas.append(area)
+            heights.append(building[0])
+    built_area = np.sum(separate_areas)
+    proportional_areas = [separate_area/built_area for separate_area in separate_areas]
+    proportional_heights = [proportional_areas[i] * heights[i] for i in range(len(proportional_areas))]
+    average_height = np.sum(proportional_heights)
+    pixel_poly = Polygon(pixel)
+    pixel_area = pixel_poly.area
+    prop_area_built = built_area/pixel_area
+    return prop_area_built, average_height
+
+def get_pd_series_coverage_height(row):
+    """
+    This functions requires all building data to be saved as 'paris_buildings',
+    and a clipper saved as clip, and can only be used on the paris dataframe from
+    paris.csv. Very specific function, would need to be tweaked to work for anything else
+    """
+    prop_area_built, pixel_average_height = get_building_coverage_and_height(paris_buildings, clip, row['bb'])
+    return pd.Series([prop_area_built, pixel_average_height])
