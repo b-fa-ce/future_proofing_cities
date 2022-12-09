@@ -42,13 +42,22 @@ def slice_picture_coords(full_coords: list, scaling_factor: int, overlap_percent
     return tiles_coords
 
 
-def get_sub_tile(image_data, tiles_coords: list, image_number: int) -> pd.DataFrame:
+def get_sub_tile(full_df: pd.DataFrame, tiles_coords: list, image_number: int) -> pd.DataFrame:
     """
+    description:
     returns the sub image according to the smaller
     tile coordinates
+
+    input:
+    full_df: full original dataframe
+    tiles_coords: coordinates of all subtiles from slice_picture_coords()
+    image_number: number of image to return
+
+    output:
+    returns the image_number-th subtile dataframe
     """
     # convert imported upper left corner str into list
-    ul_import = image_data.ul_corner.apply(literal_eval)
+    ul_import = full_df.ul_corner.apply(literal_eval)
 
     # divide ul_corner into lists of lat and lon
     ul_lat = np.array([ul[0] for ul in ul_import])[:,0]
@@ -58,9 +67,9 @@ def get_sub_tile(image_data, tiles_coords: list, image_number: int) -> pd.DataFr
     slice_bound_lat = tiles_coords[image_number][0]
     slice_bound_lon = tiles_coords[image_number][1]
 
-    sub_image = image_data[(ul_lat >= slice_bound_lat[0]) &\
+    sub_df = full_df[(ul_lat >= slice_bound_lat[0]) &\
                            ((ul_lat < slice_bound_lat[1])) &\
                            ((ul_lon >= slice_bound_lon[0])) &\
                            ((ul_lon < slice_bound_lon[1]))]
 
-    return sub_image
+    return sub_df
