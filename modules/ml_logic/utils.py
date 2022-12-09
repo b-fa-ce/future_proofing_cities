@@ -3,15 +3,23 @@ import pandas as pd
 from ast import literal_eval
 
 
-def slice_picture_coords(full_coords, scaling_factor):
+def slice_picture_coords(full_coords: list, scaling_factor: int, overlap_percent: int = 0) -> list:
     """
+    description:
     returns a list of length scaling_factor^2
-    of coordinates of the slices in format: [[lat, lon],[lat+lat_step, lon+lon_step]]
-    input:  bounding box full_coords = [[lon_1, lon_2], [lat_1, lat_2]]
-    output: list of [[lon,lat],[lon+lon_step,lat+lat_step]]
+    of coordinates of the slices in format: [[lon,lon+lon_step], [lat,lat+lat_step]]
+
+    input:
+    bounding box full_coords = [[lon_1, lon_2], [lat_1, lat_2]],
+    scaling_factor: number of divisions in lon and lat
+    overlap_percent: percentage of overlap between individual tiles
+
+    output:
+    list of [[lon,lon+lon_step], [lat,lat+lat_step]]
 
     usage: slice_picture_coords(CITY_BOUNDING_BOXES['Paris'], 100)
     """
+
     # flatten bb cooordinates
     lon1, lon2, lat1, lat2 = [item for sublist in full_coords for item in sublist]
 
@@ -23,9 +31,13 @@ def slice_picture_coords(full_coords, scaling_factor):
     lat_step = lat_dist/scaling_factor
     lon_step = lon_dist/scaling_factor
 
+    # overlap in lon, lat
+    lat_overlap = overlap_percent/100 * lat_step
+    lon_overlap = overlap_percent/100 * lon_step
+
     # create coordinates of tiles
-    tiles_coords = [[[lon,lon+lon_step], [lat,lat+lat_step]] for lat in np.arange(lat1,lat2, lat_step) \
-        for lon in np.arange(lon1,lon2, lon_step)]
+    tiles_coords = [[[lon,lon+lon_step], [lat,lat+lat_step]] for lat in np.arange(lat1,lat2, lat_step-lat_overlap) \
+        for lon in np.arange(lon1,lon2, lon_step-lon_overlap)]
 
     return tiles_coords
 
