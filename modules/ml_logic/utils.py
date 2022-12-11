@@ -198,12 +198,126 @@ def get_corners(slice_coords: list):
     return [get_correct_odering(get_permutations(coords)) for coords in slice_coords]
 
 
+###################### better implementation ###########################
+
+def get_split_indices(data_array: np.array, number_features: int):
+    """
+    returns index where array has to be split
+    """
+    return len(data_array)/number_features
+
+
+def split_array(data_array: np.array, split_index:int):
+    """
+    returns split array
+    """
+    return [data_array[i:i+split_index] for i in range(0,len(data_array), split_index)]
+
+
+def get_sub_tiles(data: pd.DataFrame, num_px_lon: int, num_px_lat:int):
+    """"
+    description:
+    converts input dataframe to numpy array with shape of lon, lat and depth
+    of features
+
+    input:
+    data: dataframe, num_px_lon, num_px_lat: required dimensions of subtiles
+
+    returns:
+    list of data tensor subtiles with dimensions num_px_lon in longitude and
+    num_px_lat in latitude dimension
+    and subtile bb coords in [[lon_min, lon_max], [lat_min, lat_max]]
+    """
+
+    # reduce size of df
+    if 'geometry' in data.columns:
+        df_red = data.drop(columns=['LST', 'ele','ll_corner', 'ur_corner', 'lr_corner','bb', 'geometry'])
+    else:
+        df_red = data.drop(columns=['LST', 'ele','ll_corner', 'ur_corner', 'lr_corner','bb'])
+
+    # convert str to list
+    df_red['ul_corner'] = df_red.ul_corner.apply(literal_eval)
+
+    # separate into lat and lon
+    df_red['lon'] = np.array([row[0] for row in df_red.ul_corner])[:,0]
+    df_red['lat'] = np.array([row[0] for row in df_red.ul_corner])[:,1]
+
+    # set lon, lat as index and unstack
+    data_coord_array = df_red.set_index(['lon', 'lat']).unstack().sort_index()
+    data_array = data_coord_array.drop(columns = 'ul_corner').values
+    coord_array = data_coord_array['ul_corner'].values
+
+    # split data array
+    number_features = len(df_red.columns)-3 # minus lat, lon, ul_corner
+    split_index_data = int(get_split_indices(data_array[0], number_features))
+
+    # transform data_array
+    data_array_trans = np.array([np.array(split_array(array, split_index_data)).T for array in data_array])
+
+    # split coords array
+    split_index_coord = int(get_split_indices(coord_array[0], 1))
+
+    # transform coord_array
+    coord_array_trans = np.array([np.array(split_array(array, split_index_coord)).T for array in coord_array])
+
+    lon_dim, lat_dim = data_array_trans.shape[:2]
+
+    lon_range = range(0, lon_dim - num_px_lon, num_px_lon)
+    lat_range = range(0, lat_dim - num_px_lat, num_px_lat)
+
+    # divide data and coords into subtiles
+    data_tiles = np.array([data_array_trans[i:i+num_px_lon, j:j+num_px_lat, :] for i in lon_range for j in lat_range])
+    coord_tiles = np.array([coord_array_trans[i:i+num_px_lon, j:j+num_px_lat, :] for i in lon_range for j in lat_range])
+
+    # select just the coord tiles boundaries
+    coord_bb = np.array([[[coords[j,0,0][0][0], coords[j,0,-1][0][0]], [coords[j,0,0][0][1], coords[j,0,-1][0][1]]] for coords in coord_tiles\
+                            for j in range(coord_tiles.shape[1])])
+
+
+    return data_tiles, coord_bb
+
+
+def tile_whole_city(city:str, num_px_lon: int = 32, num_px_lat: int = 32):
+    """
+    tiles whole city in with size num_px_lon in longitude and
+    num_px_lat in latitude dimension
+    """
+
+    # import csv data
+    data_in_path = os.path.join(INPUT_PATH, city, f'{city}.csv')
+
+    data = pd.read_csv(data_in_path)
+    data_tiles, coord_bb = get_sub_tiles(data, num_px_lon, num_px_lat)
+
+    # export both data and coords bounding boxes
+    data_ex_path = os.path.join(INPUT_PATH, city, f'{city}_data_tiles_{num_px_lon}_{num_px_lat}.npy')
+    coords_ex_path = os.path.join(INPUT_PATH, city, f'{city}_coordbb_tiles_{num_px_lon}_{num_px_lat}.npy')
+
+    np.save(data_ex_path, data_tiles)
+    np.save(coords_ex_path, coord_bb)
+
+    return data_tiles, coord_bb
+
+
+def import_data_array(city: str, num_px_lon: int = 32, num_px_lat: int = 32) -> np.array:
+    """
+    import data array of subtiles of specific city
+    """
+    data_path = os.path.join(INPUT_PATH, city, f'{city}_data_tiles_{num_px_lon}_{num_px_lat}.npy')
+
+    return np.load(data_path)
+
+
+def import_bb_array(city: str, num_px_lon: int = 32, num_px_lat: int = 32) -> np.array:
+    """
+    import boounding box coordinate array of subtiles of specific city
+    """
+    data_path = os.path.join(INPUT_PATH, city, f'{city}_coordbb_tiles_{num_px_lon}_{num_px_lat}.npy')
+
+    return np.load(data_path)
+
+
+
 if __name__ == '__main__':
     city = 'Paris'
-    df_path = os.path.join(INPUT_PATH, city, f'{city}.csv')
-    coords_path = os.path.join(INPUT_PATH, city, f'{city}.npy')
-
-    df = pd.read_csv(df_path)
-    coords = get_all_sub_coords(df)
-
-    np.save(coords_path, coords)
+    tile_whole_city(city, num_px_lon= 32, num_px_lat = 32)
