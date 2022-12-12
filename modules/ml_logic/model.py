@@ -14,14 +14,16 @@ from modules.ml_logic.utils import slice_picture_coords
 # ToDO: perform slicing of full image of 100x100 = 10000 slices -> where best to do it?
 
 
-def initialize_model() -> Model:
+def initialize_model(n: tuple) -> Model:
     """
     initialise Neural Network
+    n =  n_pixel_lat * n_pixel_lon * number of features
+    This model predicts delta T/sub-tile (loss on MSE)
     """
     model = Sequential()
 
     ### First Convolution & MaxPooling
-    model.add(layers.Conv2D(8, (4,4), input_shape=X_train.shape[1:].as_list(), padding = 'same', activation = 'relu'))
+    model.add(layers.Conv2D(8, (5,5), input_shape=n, padding = 'same', activation = 'relu'))
     model.add(layers.MaxPool2D(pool_size = (2,2)))
 
     ### Second Convolution & MaxPooling
@@ -34,11 +36,11 @@ def initialize_model() -> Model:
     ### One Fully Connected layer - "Fully Connected" is equivalent to saying "Dense"
     model.add(layers.Dense(10, activation = 'relu'))
 
-    ### Last layer - Classification Layer with 10 outputs corresponding to 10 digits
-    model.add(layers.Dense(10, activation = 'softmax'))
+    ### Last layer - Regression layer with one output, the prediction
+    model.add(layers.Dense(1, activation = 'linear'))
 
     ### Model compilation
-    model.compile(loss='categorical_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
+    model.compile(loss='mse', optimizer = 'adam', metrics = ['mae'])
 
     return model
 
