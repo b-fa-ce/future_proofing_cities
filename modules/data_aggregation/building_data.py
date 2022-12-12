@@ -355,11 +355,15 @@ def get_full_coverage_and_height(buildings, clip, pixel, padding_distance):
 
 def get_pd_series_full_coverage_height(row):
     """
+
+  
+
     This functions requires all building data to be saved as 'paris_buildings',
     and a clipper saved as clip (USE MODIFIED CLIPPER),
     and can only be used on the paris dataframe from paris.csv when the bb has had
     literal_eval applied and saved to a new column bounds.
     Very specific function, would need to be tweaked to work for anything else.
+
     """
     prop_area_built, pixel_average_height = get_full_coverage_and_height(paris_buildings, clip, row['bounds'])
     return pd.Series([prop_area_built, pixel_average_height])

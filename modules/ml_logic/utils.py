@@ -152,12 +152,8 @@ def get_permutations(ndim_list):
     if len(ndim_list) == 1:
         res = ndim_list
     else:
-        if len(ndim_list) == 2:
-            res = [[i, j] for i in ndim_list[0] for j in ndim_list[1]]
-        elif len(ndim_list) == 3:
-            res = [[i, j, k] for i in ndim_list[0] for j in ndim_list[1] for k in ndim_list[2]]
-        else:
-            res = [[i, j, k, l] for i in ndim_list[0] for j in ndim_list[1] for k in ndim_list[2] for l in ndim_list[3]]
+        res = [[i, j] for i in ndim_list[0] for j in ndim_list[1]]
+
     return res
 
 
