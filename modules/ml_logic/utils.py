@@ -319,7 +319,70 @@ def import_bb_array(city: str, num_px_lon: int = 32, num_px_lat: int = 32) -> np
     return np.load(data_path)
 
 
+def get_subpoints_one(point: list, lon_lat_dist: list, scaling_factor: int = 2):
+    """
+    returns point, divided by scaling_factor
+    """
+    diff_lon, diff_lat = lon_lat_dist
+    #one point
+    corner_diffs = [[[diff_lon/scaling_factor, 0], [0,0], [0, diff_lat/scaling_factor], [diff_lon/scaling_factor, diff_lat/scaling_factor]], # first four subpoints
+                    [[diff_lon, 0], [diff_lon/scaling_factor,0], [diff_lon/scaling_factor, diff_lat/scaling_factor], [diff_lon, diff_lat/scaling_factor]], # second
+                    [[0,diff_lat/scaling_factor], [0, diff_lat], [diff_lon/scaling_factor, diff_lat], [diff_lon/scaling_factor, diff_lat/scaling_factor]], # 3rd
+                    [[diff_lon, diff_lat/scaling_factor], [diff_lon/scaling_factor,diff_lat/scaling_factor], [diff_lon/scaling_factor, diff_lat], [diff_lon, diff_lat]]] # 4th
+
+    sub_points = point + corner_diffs
+
+    return sub_points
+
+
+def get_all_subpoints(data: pd.DataFrame, scaling_factor:int = 2):
+    """
+    returns all points divided by four
+    """
+    # ul, lr corners
+    lr_corner = np.array([corner for corner in data['lr_corner'].apply(literal_eval)])
+    ul_corner = np.array([corner for corner in data['ul_corner'].apply(literal_eval)])
+
+    # difference between points
+    corner_diff_lon_lat = np.array([(lr_corner-ul_corner)[:,0,0], (lr_corner-ul_corner)[:,0,1]]).T
+
+    all_points = [get_subpoints_one(ul_corner[i],corner_diff_lon_lat[i], scaling_factor) for i in range(len(ul_corner))]
+
+    return np.array(all_points).reshape(np.multiply(*np.array(all_points).shape[:2]),4,2)
+
+
+
+def subpixels_city(city:str, scaling_factor: int = 2):
+    """
+    saves subpixels of city to disk
+    """
+    # import csv data
+    data_in_path = os.path.join(INPUT_PATH, city, f'{city}.csv')
+    data = pd.read_csv(data_in_path)
+
+    # get subpixels
+    subpixels = get_all_subpoints(data)
+
+    # export
+    subpixels_ex_path = os.path.join(INPUT_PATH, city, f'{city}_subpixels_{scaling_factor}.npy')
+
+    np.save(subpixels_ex_path, subpixels)
+
+
+def import_subpixels(city: str, scaling_factor: int = 2) -> np.array:
+    """
+    import boounding box subpixel array of subtiles of specific city
+    """
+    data_path = os.path.join(INPUT_PATH, city, f'{city}_subpixels_{scaling_factor}.npy')
+
+    return np.load(data_path)
+
+
 
 if __name__ == '__main__':
     city = 'Paris'
+    # create subtiles
     tile_whole_city(city, num_px_lon= 32, num_px_lat = 32)
+
+    # create subpixels
+    subpixels_city(city, 2)
