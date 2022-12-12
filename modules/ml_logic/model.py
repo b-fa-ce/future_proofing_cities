@@ -11,8 +11,6 @@ from modules.data_aggregation.params import CITY_BOUNDING_BOXES
 from modules.ml_logic.utils import slice_picture_coords
 
 
-# ToDO: perform slicing of full image of 100x100 = 10000 slices -> where best to do it?
-
 
 def initialize_model(n: tuple) -> Model:
     """
