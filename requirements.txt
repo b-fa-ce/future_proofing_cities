@@ -120,3 +120,7 @@ pyproj
 
 # learning
 tensorflow
+
+# api
+fastapi
+uvicorn

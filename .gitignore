@@ -9,6 +9,7 @@ preprocessing.egg-info/
 __pycache__
 *.ipynb_checkpoints
 .DS_Store
+.env
 
 # notebooks
 notebooks_gridding.ipynb

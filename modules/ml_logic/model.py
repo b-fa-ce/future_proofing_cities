@@ -27,29 +27,30 @@ def initialize_model(in_shape: tuple) -> Model:
 
     ### First Convolution & MaxPooling
     model.add(layers.Conv2D(filters = 8, kernel_size= (2,2), input_shape=in_shape, padding = 'same', activation = 'relu'))
-    model.add(layers.AveragePooling2D(pool_size = (2,2)))
+    # model.add(layers.AveragePooling2D(pool_size = (2,2)))
 
     ### Second Convolution & MaxPooling
     model.add(layers.Conv2D(16, (2,2), activation = 'relu'))
 
-    if in_shape[2] >= 10:
+    if in_shape[2] >= 12:
         model.add(layers.AveragePooling2D(pool_size = (2,2)))
 
     ### Second Convolution & MaxPooling
     model.add(layers.Conv2D(32, (2,2), activation = 'relu'))
-    # model.add(layers.AveragePooling2D(pool_size = (2,2)))
+    model.add(layers.AveragePooling2D(pool_size = (2,2)))
 
-    # model.add(layers.Conv2D(4, (2,2), activation = 'relu'))
+    if in_shape[2] >= 12:
+        model.add(layers.AveragePooling2D(pool_size = (2,2)))
+        model.add(layers.Conv2D(4, (2,2), activation = 'relu'))
 
     ### Flattening
     model.add(layers.Flatten())
 
     ### One Fully Connected layer - "Fully Connected" is equivalent to saying "Dense"
     model.add(layers.Dense(10, activation = 'relu'))
+    model.add(layers.Dropout(rate = 0.2))
 
-    # model.add(layers.Dense(20, activation = 'relu'))
-
-    # add more here?
+    model.add(layers.Dense(10, activation = 'linear'))
 
     ### Last layer - Regression layer with one output, the prediction
     model.add(layers.Dense(1, activation = 'linear'))
