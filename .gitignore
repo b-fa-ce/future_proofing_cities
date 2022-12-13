@@ -1,5 +1,5 @@
 raw_data/
-notebooks/
+# notebooks/
 ohsome_api/test.ipynb
 ohsome_api/paris.ipynb
 test.ipynb
