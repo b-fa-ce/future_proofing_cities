@@ -373,6 +373,16 @@ def import_subpixels(city: str, scaling_factor: int = 2) -> np.array:
 
     return np.load(data_path)
 
+def get_average_temperature_per_tile(import_data: np.array, index: int = 0) -> np.array:
+    """
+    returns average temperature difference to mean temp
+    per tile for given city
+    """
+    # import_data = import_data_array(city)
+
+    return np.array([np.mean(tile) for tile in import_data[:,:,:,index]])
+
+
 
 
 if __name__ == '__main__':
