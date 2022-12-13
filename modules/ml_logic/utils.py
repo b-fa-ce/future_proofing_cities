@@ -402,7 +402,71 @@ def get_average_temperature_per_tile(import_data: np.array, index: int = 0) -> n
 
     return np.array([np.mean(tile) for tile in import_data[:,:,:,index]])
 
+def get_zero_buildings_lat_range(df):
 
+    # group by latitude and get mean of building coverage
+    build_den = pd.DataFrame(df.groupby(by='lat')['building_coverage'].mean().sort_index()).reset_index()
+
+    # get every averaged lon row close to zero
+    build_zero = build_den[build_den.building_coverage <= .005]
+
+    # get the indexes of the pixels that span the latitudes of missing data
+    indexes_for_bounds = []
+    start_strip = True
+    for i in range(len(build_zero.index)):
+        # add the beginning of a missing strip of data
+        if start_strip:
+            indexes_for_bounds.append(build_zero.index[i])
+            start_strip = False
+            continue
+        # if it is the last one, add that+1
+        if build_zero.index[i] == build_zero.index[-1]:
+            indexes_for_bounds.append(build_zero.index[i]+1)
+        # if the next one is not consecutive, then is the next of the missing strip
+        elif build_zero.index[i]+1 != build_zero.index[i+1]:
+            indexes_for_bounds.append(build_zero.index[i]+1)
+            start_strip = True
+
+    # constructing the ranges in pairs
+    lat_pairs = []
+    start_pair = True
+    for index in indexes_for_bounds:
+        if start_pair:
+            pair = [build_den.iloc[index,:].lat]
+            start_pair = False
+            continue
+        if not start_pair:
+            pair.append(build_den.iloc[index,:].lat)
+            lat_pairs.append(pair)
+            start_pair = True
+
+    return lat_pairs
+
+def get_useful_strips(df):
+    df_red = df.drop(columns=['LST', 'ele','ll_corner', 'ur_corner', 'lr_corner','bb'])
+
+    # convert str to list
+    df_red['ul_corner'] = df_red.ul_corner.apply(literal_eval)
+
+    # drop irrelevant index
+    df_red.drop(columns='Unnamed: 0', inplace=True)
+
+    # get lon, lat of ul corner
+    df_red['lon'] = np.array([row[0] for row in df_red.ul_corner])[:,0]
+    df_red['lat'] = np.array([row[0] for row in df_red.ul_corner])[:,1]
+
+    lat_ranges = get_zero_buildings_lat_range(df_red)
+
+    dfs = []
+    for i in range(len(lat_ranges)+1):
+        if i == 0:
+            dfs.append(df_red[df_red['lat'] <= lat_ranges[i][0]])
+        elif i == len(lat_ranges):
+            dfs.append(df_red[df_red['lat'] >= lat_ranges[i-1][1]])
+        else:
+            dfs.append(df_red[(df_red['lat'] >= lat_ranges[i-1][1]) & (df_red['lat'] <= lat_ranges[i][0])])
+
+    return dfs
 
 
 if __name__ == '__main__':
