@@ -1,6 +1,6 @@
 from colorama import Fore, Style
 
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.compose import ColumnTransformer
 
 import pandas as pd
@@ -27,12 +27,14 @@ def create_features_preprocessor() -> ColumnTransformer:
 
     # instantiate scalers
     standard = StandardScaler()
+    robust = RobustScaler()
     minmax = MinMaxScaler()
 
     # COMBINED PREPROCESSOR
     preprocessor = ColumnTransformer(
         [
-            # ("building_height_scaler", standard, ['building_height']),
+            ("building_height_scaler", robust, ['av_building_height']),
+            ("building_density_scaler", robust, ['building_coverage']),
             ("elevation_scaler", minmax, ['ele_diff']),
         ],
         remainder='passthrough',
@@ -57,6 +59,7 @@ def preprocess_features(X: pd.DataFrame):
 
     col_names = preprocessor.get_feature_names_out()
     col_names = [name.removeprefix("remainder__").removeprefix('elevation_scaler__') for name in col_names]
+    col_names = [name.removeprefix("building_density_scaler__").removeprefix('building_height_scaler__') for name in col_names]
 
     print(col_names)
 
