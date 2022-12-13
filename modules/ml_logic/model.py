@@ -26,23 +26,28 @@ def initialize_model(in_shape: tuple) -> Model:
     model = Sequential()
 
     ### First Convolution & MaxPooling
-    model.add(layers.Conv2D(filters = 8, kernel_size= (3,3), input_shape=in_shape, padding = 'same', activation = 'relu'))
-    model.add(layers.MaxPool2D(pool_size = (2,2)))
+    model.add(layers.Conv2D(filters = 8, kernel_size= (2,2), input_shape=in_shape, padding = 'same', activation = 'relu'))
+    model.add(layers.AveragePooling2D(pool_size = (2,2)))
 
     ### Second Convolution & MaxPooling
-    model.add(layers.Conv2D(16, (3,3), activation = 'relu'))
-    # model.add(layers.MaxPool2D(pool_size = (2,2)))
+    model.add(layers.Conv2D(16, (2,2), activation = 'relu'))
+
+    if in_shape[2] >= 10:
+        model.add(layers.AveragePooling2D(pool_size = (2,2)))
 
     ### Second Convolution & MaxPooling
-    # make sure thate size is small enough
     model.add(layers.Conv2D(32, (2,2), activation = 'relu'))
-    model.add(layers.MaxPool2D(pool_size = (2,2)))
+    # model.add(layers.AveragePooling2D(pool_size = (2,2)))
+
+    # model.add(layers.Conv2D(4, (2,2), activation = 'relu'))
 
     ### Flattening
     model.add(layers.Flatten())
 
     ### One Fully Connected layer - "Fully Connected" is equivalent to saying "Dense"
     model.add(layers.Dense(10, activation = 'relu'))
+
+    # model.add(layers.Dense(20, activation = 'relu'))
 
     # add more here?
 
@@ -65,7 +70,7 @@ def compile_model(model: Model, learning_rate: float = 0.01) -> Model:
     """
 
     optimizer = optimizers.Adam(learning_rate=learning_rate)
-    model.compile(loss="mse", optimizer=optimizer, metrics=["mae"])
+    model.compile(loss="huber", optimizer=optimizer, metrics=["mae"])
 
     print("\n✅ model compiled")
     return model
