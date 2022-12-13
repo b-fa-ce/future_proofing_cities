@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import mpmath as mp
 import requests
 from shapely.geometry import Polygon
-from long_lat import pad_pixel
 
+from modules.data_aggregation.long_lat import pad_pixel
 
 def get_tile(lat_deg, lon_deg, zoom=15):
     """
@@ -30,8 +30,8 @@ def tile_bbox(z,x,y):
     '''
     w = tile2lon(z,x,y)
     s = tile2lat(z,x,y)
-    e = tile2lon(z,x+1,y)
-    n = tile2lat(z,x,y+1)
+    e = tile2lon(z,x-1,y)
+    n = tile2lat(z,x,y-1)
     return [w,s,e,n]
 
 def osmbuildings_request(latitude:float, longitude:float):
@@ -45,34 +45,45 @@ def osmbuildings_request(latitude:float, longitude:float):
     print(f"URL: {url}")
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0'}
     response = requests.get(url, headers = headers)
-    json_response = response.json()
-    return json_response
+    try:
+        return response.json()
+    except ValueError:
+        return None
 
-def get_tiles(city_coords):
-    """
-    Gets the number of tiles that form the grid over the city
-    """
-    ul_tile = get_tile(lat_deg=city_coords['upper_left'][0], lon_deg=city_coords['upper_left'][1], zoom=15)
-    lr_tile = get_tile(lat_deg=city_coords['lower_right'][0], lon_deg=city_coords['lower_right'][1], zoom=15)
-    city_xtiles = np.abs(ul_tile[1] - lr_tile[1])
-    city_ytiles = np.abs(ul_tile[2] - lr_tile[2])
-    city_tiles = [city_xtiles, city_ytiles]
-    return city_tiles
+def get_boundaries(bounds):
+    first = [bounds[0][0], bounds[0][1]]
+    second = [bounds[0][0], bounds[1][1]]
+    third = [bounds[1][0], bounds[1][1]]
+    fourth = [bounds[1][0], bounds[0][1]]
+    return [first, second, third, fourth, first]
 
-def get_all_tiles(city_coords, city_tiles):
-    """
-    Returns two lists, one for each x and one for each y
-    """
-    starting_tile = []
-    starting_tile.append(get_tile(city_coords['upper_left'][0], city_coords['upper_left'][1])[1])
-    starting_tile.append(get_tile(city_coords['upper_left'][0], city_coords['upper_left'][1])[2])
-    x_tiles = []
-    y_tiles = []
-    for x in range(city_tiles[0]-1):
-        x_tiles.append(starting_tile[0] + x)
-    for y in range(city_tiles[1]-1):
-        y_tiles.append(starting_tile[1] + y)
-    return x_tiles, y_tiles
+def get_tiles_from_boundaries(boundaries):
+    bottom_left = get_tile(boundaries[0][0], boundaries[0][1])
+    top_left = get_tile(boundaries[1][0], boundaries[1][1])
+    top_right = get_tile(boundaries[2][0], boundaries[2][1])
+    bottom_right = get_tile(boundaries[3][0], boundaries[3][1])
+    verticals = list(range(bottom_left[1], top_left[1]+2))
+    horizontals = list(range(top_right[2]-1, bottom_left[2]+1))
+    xyz_tiles = [[v, h] for v in verticals for h in horizontals]
+    return xyz_tiles
+
+def get_all_tiles(bounds):
+    boundaries = get_boundaries(bounds)
+    xyz_tiles = get_tiles_from_boundaries(boundaries)
+    return xyz_tiles
+
+def call_api_for_bounds(bounds, zoom=15):
+    xyz_tiles = get_all_tiles(bounds)
+    city_jsons = {}
+    for xyz_tile in xyz_tiles:
+        tile = [xyz_tile[0], xyz_tile[1]]
+        tile_lat = tile2lat(zoom, xyz_tile[0], xyz_tiles[1])
+        tile_lon = tile2lon(zoom, xyz_tile[0], xyz_tiles[1])
+        json_response = osmbuildings_request(tile_lat, tile_lon)
+        if json_response == None:
+            continue
+        city_jsons[tile] = json_response
+    return city_jsons
 
 def get_all_tile_jsons(x_tiles, y_tiles, zoom=15):
     """
@@ -83,8 +94,10 @@ def get_all_tile_jsons(x_tiles, y_tiles, zoom=15):
         for y in y_tiles:
             tile_lat = tile2lat(zoom, x, y)
             tile_lon = tile2lon(zoom, x, y)
-            tile = (x, y)
+            tile = [x, y]
             json_response = osmbuildings_request(tile_lat, tile_lon)
+            if json_response == None:
+                continue
             city_jsons[tile] = json_response
     return city_jsons
 
@@ -102,7 +115,8 @@ def receive_building_data(jsons):
     return buildings
 
 def get_split_coords(coords):
-    """Separate lon and lat
+    """
+    Separate lon and lat coordinates into x and y lists
     """
     x = []
     y = []
@@ -111,43 +125,66 @@ def get_split_coords(coords):
         y.append(coord[1])
     return x, y
 
-def plot_pixel_and_polygons(polygons, pixel):
-    """
-    Plots a pixel and the polygons on same axis
-    """
-    pixel_returning = pixel.copy()
-    pixel_returning.append(pixel[0])
-    x, y = get_split_coords(pixel_returning)
-    plt.plot(x, y)
-    for polygon in polygons:
-        x, y = get_split_coords(polygon)
+def plot_pixel_and_local_buildings(pixel, buildings, padding):
+    local_buildings = []
+    padded_pixel = pad_pixel(pixel, padding)
+    for building in buildings:
+        building_coords = building[1]
+        if is_polygon_point_inside(building_coords, padded_pixel):
+            local_buildings.append(building_coords)
+    fig = plt.figure(figsize=(12, 7))
+    pixel.append(pixel[0])
+    x, y = get_split_coords(pixel)
+    plt.plot(x, y, linewidth=4)
+    for building in local_buildings:
+        x, y = get_split_coords(building)
         plt.plot(x, y)
-    return
-
-def visualise_buildings_pixel(pixels, buildings, number, clip):
-    """
-    Combines functions so when given a list of pixels and the index,
-    it plots out that pixel, all polygons, and gives a percentage coverage
-    """
-    chosen_pixel = pixels[number]
-    matching_buidlings = get_pixel_buildings(buildings, chosen_pixel)
-    plot_pixel_and_polygons(matching_buidlings, chosen_pixel)
-    coverage = get_building_coverage(buildings, clip, chosen_pixel)
-    plt.title(f"Building coverage is {round(coverage, 3)}%.")
     plt.show();
 
-def visualise_landuse_pixel(pixels, landuse_polygons, number, clip):
-    """
-    Combines functions so when given a list of pixels and the index,
-    it plots out that pixel, all landuse polygons, and gives a percentage coverage.
-    For testing/verifying only.
-    """
-    chosen_pixel = pixels[number]
-    matching_buidlings = get_pixel_polygons(landuse_polygons, chosen_pixel)
-    plot_pixel_and_polygons(matching_buidlings, chosen_pixel)
-    coverage = get_landuse_coverage(landuse_polygons, clip, chosen_pixel)
-    plt.title(f"Landuse coverage is {round(coverage, 3)}%.")
-    plt.show();
+# def visualise_buildings_pixel(pixels, buildings, number, clip):
+#     """
+#     Combines functions so when given a list of pixels and the index,
+#     it plots out that pixel, all polygons, and gives a percentage coverage
+#     """
+#     chosen_pixel = pixels[number]
+#     matching_buidlings = get_pixel_buildings(buildings, chosen_pixel)
+#     plot_pixel_and_polygons(matching_buidlings, chosen_pixel)
+#     coverage = get_building_coverage(buildings, clip, chosen_pixel)
+#     plt.title(f"Building coverage is {round(coverage, 3)}%.")
+#     plt.show();
+
+# def visualise_landuse_pixel(pixels, landuse_polygons, number, clip):
+#     """
+#     Combines functions so when given a list of pixels and the index,
+#     it plots out that pixel, all landuse polygons, and gives a percentage coverage.
+#     For testing/verifying only.
+#     """
+#     chosen_pixel = pixels[number]
+#     matching_buidlings = get_pixel_polygons(landuse_polygons, chosen_pixel)
+#     plot_pixel_and_polygons(matching_buidlings, chosen_pixel)
+#     coverage = get_landuse_coverage(landuse_polygons, clip, chosen_pixel)
+#     plt.title(f"Landuse coverage is {round(coverage, 3)}%.")
+#     plt.show();
+
+
+# def visualise_buildings_padded_pixel(pixels, buildings, number, clip, padding_distance):
+#     """
+#     Combines functions so when given a list of pixels and the index,
+#     it plots out that pixel, all polygons, and gives a percentage coverage
+#     """
+#     pixel = pixels[number]
+#     local_buildings = []
+#     padded_pixel = pad_pixel(pixel, padding_distance)
+#     for building in buildings:
+#         building_coords = building[1]
+#         if is_polygon_point_inside(building_coords, padded_pixel):
+#             local_buildings.append(building)
+#     plot_pixel_and_polygons(building_coords, pixel)
+#     coverage = (get_full_coverage_and_height(buildings, clip, pixel, padding_distance))[0]
+#     plt.title(f"Building coverage is {round(coverage, 3)}%.")
+#     plt.show();
+
+
 
 def get_pixel_polygons(polygons, pixel):
     """
@@ -185,6 +222,8 @@ def get_clipped_polygon_area(polygon_coords, clip, pixel):
     returns the area of the clipped polygon
     """
     clipped = clip(polygon_coords, pixel)
+    if len(clipped) == 0:
+        return False
     pgon = Polygon(clipped)
     area = pgon.area
     return area
@@ -361,5 +400,5 @@ def get_pd_series_full_coverage_height(row):
     literal_eval applied and saved to a new column bounds.
     Very specific function, would need to be tweaked to work for anything else.
     """
-    prop_area_built, pixel_average_height = get_full_coverage_and_height(paris_buildings, clip, row['bounds'])
+    prop_area_built, pixel_average_height = get_full_coverage_and_height(paris_buildings, clip, row['bb'])
     return pd.Series([prop_area_built, pixel_average_height])
