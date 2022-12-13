@@ -243,6 +243,10 @@ def get_sub_tiles(data: pd.DataFrame, num_px_lon: int, num_px_lat:int):
     data_array = data_coord_array.drop(columns = 'ul_corner').values
     coord_array = data_coord_array['ul_corner'].values
 
+    ###################################################
+    ########### function for selecting tiles ##########
+    ###################################################
+
     # split data array
     number_features = len(df_red.columns)-3 # minus lat, lon, ul_corner
     split_index_data = int(get_split_indices(data_array[0], number_features))
