@@ -262,8 +262,8 @@ def get_sub_tiles(data: pd.DataFrame, num_px_lon: int, num_px_lat:int):
 
     lon_dim, lat_dim = data_array_trans.shape[:2]
 
-    lon_range = range(0, lon_dim - num_px_lon, num_px_lon)
-    lat_range = range(0, lat_dim - num_px_lat, num_px_lat)
+    lon_range = np.arange(0, lon_dim - num_px_lon, num_px_lon) # minus 1 ???
+    lat_range = np.arange(0, lat_dim - num_px_lat, num_px_lat) # minus 1 ???
 
     # divide data and coords into subtiles
     data_tiles = np.array([data_array_trans[i:i+num_px_lon, j:j+num_px_lat, :] for i in lon_range for j in lat_range])
