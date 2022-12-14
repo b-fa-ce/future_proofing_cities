@@ -51,8 +51,6 @@ def preprocess_features(X: pd.DataFrame):
     """
     print(Fore.BLUE + "\nPreprocess features..." + Style.RESET_ALL)
 
-    df_columns = X.columns
-
     # instantiate preproecessor
     preprocessor = create_features_preprocessor()
     X_processed = preprocessor.fit_transform(X)
@@ -60,8 +58,6 @@ def preprocess_features(X: pd.DataFrame):
     col_names = preprocessor.get_feature_names_out()
     col_names = [name.removeprefix("remainder__").removeprefix('elevation_scaler__') for name in col_names]
     col_names = [name.removeprefix("building_density_scaler__").removeprefix('building_height_scaler__') for name in col_names]
-
-    print(col_names)
 
     df_processed = pd.DataFrame(X_processed, columns=col_names)
 
