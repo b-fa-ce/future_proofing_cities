@@ -4,7 +4,7 @@ from modules.ml_logic.preprocessing import preprocess_features
 import pandas as pd
 import os
 
-INPUT_PATH = "../../data_processed"
+INPUT_PATH = "../../data/processed_data"
 
 
 def get_data(city:str,
@@ -17,8 +17,8 @@ def get_data(city:str,
     sub-tiled data-array and bounding box coords
     """
 
-    path = os.path.join(INPUT_PATH,city,'_full.csv')
-    df = pd.read_csv(path).drop(columns = "Unnamed: 0")
+    path = os.path.join(INPUT_PATH,city,f'{city}_full.csv')
+    df = pd.read_csv(path)#.drop(columns = "Unnamed: 0")
 
     # preprocess features
     if preprocess:

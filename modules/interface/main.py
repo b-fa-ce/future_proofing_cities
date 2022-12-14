@@ -121,3 +121,15 @@ def pred(X_pred: pd.DataFrame = None) -> np.ndarray:
     print("\n✅ prediction done: ", y_pred, y_pred.shape)
 
     return y_pred
+
+
+if __name__ == '__main__':
+    # train model on Paris
+    train("Paris")
+    # how to train test split??
+
+    # load new data
+    data_array = get_data(city,
+                        preprocess = True,
+                        tile_size_lon = TILE_SIZE_LON,
+                        tile_size_lat = TILE_SIZE_LAT)[0]

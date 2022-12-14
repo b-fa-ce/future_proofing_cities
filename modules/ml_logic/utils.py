@@ -400,7 +400,7 @@ def get_sub_tiles(data: pd.DataFrame, num_px_lon: int, num_px_lat:int):
     # set lon, lat as index and unstack
     data_coord_array = data.set_index(['lon', 'lat']).unstack().sort_index()
     data_array = data_coord_array.drop(columns = 'ul_corner').values
-    coord_array = data_coord_array['ul_corner'].values
+    
 
     # split data array
     number_features = len(data.columns)-3 # minus lat, lon, ul_corner
