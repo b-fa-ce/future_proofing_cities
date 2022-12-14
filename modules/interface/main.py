@@ -3,7 +3,7 @@ import pandas as pd
 
 
 from modules.ml_logic.preprocessing import preprocess_features
-from modules.ml_logic.utils import get_sub_tiles, get_average_temperature_per_tile
+from modules.ml_logic.utils import get_average_temperature_per_tile
 from modules.ml_logic.model import initialize_model, compile_model, train_model, evaluate_model
 from modules.ml_logic.registry import load_model, save_model
 from modules.ml_logic.data import get_data
@@ -11,8 +11,10 @@ from modules.ml_logic.data import get_data
 import os
 
 # General constant variables
-TILE_SIZE_LAT = 6 # size of 6 pxs
-TILE_SIZE_LON = 6 # size of 6 pxs
+TILE_SIZE_LAT = os.path.expanduser(os.environ.get("TILE_SIZE_LAT"))
+TILE_SIZE_LON = os.path.expanduser(os.environ.get("TILE_SIZE_LON"))
+
+
 
 def train(city: str):
     """
@@ -93,16 +95,12 @@ def evaluate(city: pd.DataFrame):
         context="evaluate",
 
         # Data source
-        training_set_size=DATASET_SIZE,
-        val_set_size=VALIDATION_DATASET_SIZE,
         row_count=len(X)
     )
 
     save_model(params=params, metrics=dict(mae=mae))
 
     return mae
-
-
 
 
 

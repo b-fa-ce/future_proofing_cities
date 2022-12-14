@@ -51,8 +51,6 @@ def preprocess_features(X: pd.DataFrame):
     """
     print(Fore.BLUE + "\nPreprocess features..." + Style.RESET_ALL)
 
-    df_columns = X.columns
-
     # instantiate preproecessor
     preprocessor = create_features_preprocessor()
     X_processed = preprocessor.fit_transform(X)

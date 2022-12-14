@@ -253,10 +253,6 @@ def get_sub_tiles(data: pd.DataFrame, num_px_lon: int, num_px_lat:int):
 
     coord_array = coord_array_ul
 
-    ###################################################
-    ########### function for selecting tiles ##########
-    ###################################################
-
     # split data array
     number_features = len(df_red.columns)-4 # minus lat, lon, ul_corner, lr_corner
     split_index_data = int(get_split_indices(data_array[0], number_features))
@@ -279,13 +275,6 @@ def get_sub_tiles(data: pd.DataFrame, num_px_lon: int, num_px_lat:int):
     data_tiles = np.array([data_array_trans[i:i+num_px_lon, j:j+num_px_lat, :] for i in lon_range for j in lat_range])
     coord_tiles_ul = np.array([coord_array_trans_ul[i:i+num_px_lon, j:j+num_px_lat, :] for i in lon_range for j in lat_range])
     coord_tiles_lr = np.array([coord_array_trans_lr[i:i+num_px_lon, j:j+num_px_lat, :] for i in lon_range for j in lat_range])
-
-    # select just the coord tiles boundaries
-    # coord_bb = np.array([[[coords[j,0,0][0][0], coords[-1,-1,0][0][0]], [coords[j,0,0][0][1], coords[-1,-1,0][0][1]]] for coords in coord_tiles\
-    #                         for j in range(coord_tiles.shape[1]-1)])
-
-    # coord_bb = np.array([[[coords_ul[0,0,0][0][0], coords[-1,-1,0][0][0]], [coords_ul[0,0,0][0][1], coords[-1,-1,0][0][1]]] \
-    #                         for coords_ul in coord_tiles_ul for coords_lr in coord_tiles_lr])
 
     coord_bb = np.array([[[coord_tiles_ul[i][0,0,0][0][0], coord_tiles_lr[i][-1,-1,0][0][0]], \
                         [coord_tiles_ul[i][0,0,0][0][1], coord_tiles_lr[i][-1,-1,0][0][1]]]\
