@@ -4,6 +4,7 @@ from ast import literal_eval
 import os
 
 from modules.data_aggregation.params import CITY_BOUNDING_BOXES
+from modules.ml_logic.preprocessing import preprocess_features
 
 # processed data
 INPUT_PATH = os.path.join('..','..','data','processed_data')
@@ -364,7 +365,8 @@ def get_useful_strips(df):
     df_red['ul_corner'] = df_red.ul_corner.apply(literal_eval)
 
     # drop irrelevant index
-    df_red.drop(columns='Unnamed: 0', inplace=True)
+    if 'Unnamed: 0' in df_red.columns:
+        df_red.drop(columns='Unnamed: 0', inplace=True)
 
     # get lon, lat of ul corner
     df_red['lon'] = np.array([row[0] for row in df_red.ul_corner])[:,0]
@@ -428,6 +430,31 @@ def get_sub_tiles(data: pd.DataFrame, num_px_lon: int, num_px_lat:int):
 
 
     return data_tiles, coord_bb
+
+def get_inputs_from_df(df, num_px_lon: int, num_px_lat:int):
+    """
+    Takes a df and returns the tensors that can be fed into the model.
+    First preprocesses, then divides the dataframe into several dataframes
+    consisting of the useful strips of the building data. Then it gets the
+    sub tiles for each of those dataframes and joins them together after.
+    """
+    df_preprocessed = preprocess_features(df)
+    dfs = get_useful_strips(df_preprocessed)
+
+    data_tensors = []
+    bb_box_tensors = []
+    for df in dfs:
+        data_tiles, coord_bb = get_sub_tiles(df, num_px_lon, num_px_lat)
+        data_tensors.append(data_tiles)
+        bb_box_tensors.append(coord_bb)
+
+    tensor_tuple = tuple(tensor for tensor in data_tensors)
+    bb_boxes = tuple(coords for coords in bb_box_tensors)
+
+    joined_data = np.concatenate((tensor_tuple), axis=0)
+    joined_bb = np.concatenate((bb_boxes), axis=0)
+
+    return joined_data, joined_bb
 
 
 if __name__ == '__main__':
