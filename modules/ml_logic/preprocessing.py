@@ -59,8 +59,6 @@ def preprocess_features(X: pd.DataFrame):
     col_names = [name.removeprefix("remainder__").removeprefix('elevation_scaler__') for name in col_names]
     col_names = [name.removeprefix("building_density_scaler__").removeprefix('building_height_scaler__') for name in col_names]
 
-    print(col_names)
-
     df_processed = pd.DataFrame(X_processed, columns=col_names)
 
     # shift column 'Name' to first position

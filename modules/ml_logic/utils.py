@@ -359,10 +359,11 @@ def get_zero_buildings_lat_range(df):
     return lat_pairs
 
 def get_useful_strips(df):
-    df_red = df.drop(columns=['LST', 'ele','ll_corner', 'ur_corner', 'lr_corner','bb'])
+    df_red = df.drop(columns=['LST', 'ele','ll_corner', 'ur_corner', 'bb'])
 
     # convert str to list
     df_red['ul_corner'] = df_red.ul_corner.apply(literal_eval)
+    df_red['lr_corner'] = df_red.lr_corner.apply(literal_eval)
 
     # drop irrelevant index
     if 'Unnamed: 0' in df_red.columns:
@@ -386,50 +387,6 @@ def get_useful_strips(df):
 
     return dfs
 
-def get_sub_tiles(data: pd.DataFrame, num_px_lon: int, num_px_lat:int):
-    """"
-    description:
-    converts input dataframe to numpy array with shape of lon, lat and depth
-    of features
-    input:
-    data: dataframe, num_px_lon, num_px_lat: required dimensions of subtiles
-    returns:
-    list of data tensor subtiles with dimensions num_px_lon in longitude and
-    num_px_lat in latitude dimension
-    and subtile bb coords in [[lon_min, lon_max], [lat_min, lat_max]]
-    """
-
-    # set lon, lat as index and unstack
-    data_coord_array = data.set_index(['lon', 'lat']).unstack().sort_index()
-    data_array = data_coord_array.drop(columns = 'ul_corner').values
-    
-
-    # split data array
-    number_features = len(data.columns)-3 # minus lat, lon, ul_corner
-    split_index_data = int(get_split_indices(data_array[0], number_features))
-
-    # transform data_array
-    data_array_trans = np.array([np.array(split_array(array, split_index_data)).T for array in data_array])
-
-    # split coords array
-    split_index_coord = int(get_split_indices(coord_array[0], 1))
-
-    # transform coord_array
-    coord_array_trans = np.array([np.array(split_array(array, split_index_coord)).T for array in coord_array])
-
-    lon_dim, lat_dim = data_array_trans.shape[:2]
-
-    lon_range = range(0, lon_dim - num_px_lon, num_px_lon)
-    lat_range = range(0, lat_dim - num_px_lat, num_px_lat)
-
-    # divide data and coords into subtiles
-    data_tiles = np.array([data_array_trans[i:i+num_px_lon, j:j+num_px_lat, :] for i in lon_range for j in lat_range])
-    coord_tiles = np.array([coord_array_trans[i:i+num_px_lon, j:j+num_px_lat, :] for i in lon_range for j in lat_range])
-
-    coord_bb = np.array([[[coords[0,0,0][0][0], coords[-1,-1,0][0][0]], [coords[0,0,0][0][1], coords[-1,-1,0][0][1]]] for coords in coord_tiles])
-
-
-    return data_tiles, coord_bb
 
 def get_inputs_from_df(df, num_px_lon: int, num_px_lat:int):
     """
@@ -455,6 +412,63 @@ def get_inputs_from_df(df, num_px_lon: int, num_px_lat:int):
     joined_bb = np.concatenate((bb_boxes), axis=0)
 
     return joined_data, joined_bb
+
+
+
+
+def get_sub_tiles(data: pd.DataFrame, num_px_lon: int, num_px_lat:int):
+    """"
+    description:
+    converts input dataframe to numpy array with shape of lon, lat and depth
+    of features
+
+    input:
+    data: dataframe, num_px_lon, num_px_lat: required dimensions of subtiles
+
+    returns:
+    list of data tensor subtiles with dimensions num_px_lon in longitude and
+    num_px_lat in latitude dimension
+    and subtile bb coords in [[lon_min, lon_max], [lat_min, lat_max]]
+    """
+
+    data_array = data.drop(columns= 'lr_corner').set_index(['lon','lat']).unstack().sort_index()
+    data_array = data_array.drop(columns = 'ul_corner').values
+
+    coord_array = data[['ul_corner', 'lr_corner', 'lon', 'lat']].set_index(['lon','lat']).unstack().sort_index()
+    coord_array_ul = coord_array['ul_corner'].values
+    coord_array_lr = coord_array['lr_corner'].values
+
+    coord_array = coord_array_ul
+
+    # split data array
+    number_features = len(data.columns)-4 # minus lat, lon, ul_corner, lr_corner
+    split_index_data = int(get_split_indices(data_array[0], number_features))
+
+    # transform data_array
+    data_array_trans = np.array([np.array(split_array(array, split_index_data)).T for array in data_array])
+
+    # split coords array
+    split_index_coord = int(get_split_indices(coord_array[0], 1))
+
+    # transform coord_array
+    coord_array_trans_ul = np.array([np.array(split_array(array, split_index_coord)).T for array in coord_array_ul])
+    coord_array_trans_lr = np.array([np.array(split_array(array, split_index_coord)).T for array in coord_array_lr])
+
+    lon_dim, lat_dim = data_array_trans.shape[:2]
+    lon_range = np.arange(0, lon_dim - num_px_lon, num_px_lon)
+    lat_range = np.arange(0, lat_dim - num_px_lat, num_px_lat)
+
+    # divide data and coords into subtiles
+    data_tiles = np.array([data_array_trans[i:i+num_px_lon, j:j+num_px_lat, :] for i in lon_range for j in lat_range])
+    coord_tiles_ul = np.array([coord_array_trans_ul[i:i+num_px_lon, j:j+num_px_lat, :] for i in lon_range for j in lat_range])
+    coord_tiles_lr = np.array([coord_array_trans_lr[i:i+num_px_lon, j:j+num_px_lat, :] for i in lon_range for j in lat_range])
+
+    coord_bb = np.array([[[coord_tiles_ul[i][0,0,0][0][0], coord_tiles_lr[i][-1,-1,0][0][0]], \
+                        [coord_tiles_ul[i][0,0,0][0][1], coord_tiles_lr[i][-1,-1,0][0][1]]]\
+                            for i in range(len(coord_tiles_ul))])
+
+
+    return data_tiles, coord_bb
 
 
 if __name__ == '__main__':

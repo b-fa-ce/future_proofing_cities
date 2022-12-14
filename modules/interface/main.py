@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
+import geopandas
+from shapely.geometry import Polygon
 
 
 from modules.ml_logic.preprocessing import preprocess_features
-from modules.ml_logic.utils import get_average_temperature_per_tile
+from modules.ml_logic.utils import get_average_temperature_per_tile, get_corners
 from modules.ml_logic.model import initialize_model, compile_model, train_model, evaluate_model
 from modules.ml_logic.registry import load_model, save_model
 from modules.ml_logic.data import get_data
@@ -11,8 +13,8 @@ from modules.ml_logic.data import get_data
 import os
 
 # General constant variables
-TILE_SIZE_LAT = os.path.expanduser(os.environ.get("TILE_SIZE_LAT"))
-TILE_SIZE_LON = os.path.expanduser(os.environ.get("TILE_SIZE_LON"))
+TILE_SIZE_LAT = int(os.path.expanduser(os.environ.get("TILE_SIZE_LAT")))
+TILE_SIZE_LON = int(os.path.expanduser(os.environ.get("TILE_SIZE_LON")))
 
 
 
@@ -28,7 +30,6 @@ def train(city: str):
 
     # import data & convert to tensor
     data_array = get_data(city,
-                          preprocess = True,
                           tile_size_lon = TILE_SIZE_LON,
                           tile_size_lat = TILE_SIZE_LAT)[0]
 
@@ -75,7 +76,6 @@ def evaluate(city: pd.DataFrame):
     """
     # import data & convert to tensor
     data_array = get_data(city,
-                          preprocess = True,
                           tile_size_lon = TILE_SIZE_LON,
                           tile_size_lat = TILE_SIZE_LAT)[0]
 
@@ -104,21 +104,33 @@ def evaluate(city: pd.DataFrame):
 
 
 
-def pred(X_pred: pd.DataFrame = None) -> np.ndarray:
+def pred(city: str) -> np.ndarray:
     """
     Make a prediction using the trained model
     """
 
+    data_pred, bb_pred = get_data(city.title(), TILE_SIZE_LON, TILE_SIZE_LAT)
+
+    X_pred = data_pred[:,:,:,1:].astype('float64')
+
     if X_pred is None:
         print('Please specify data')
 
+    # load model
     model = load_model()
 
-    X_processed = preprocess_features(X_pred)
-
-    y_pred = model.predict(X_processed)
+    # predict
+    y_pred = model.predict(X_pred)
 
     print("\n✅ prediction done: ", y_pred, y_pred.shape)
+
+    # create gdf
+    pred_gdf = geopandas.GeoDataFrame(y_pred, geometry = [Polygon(get_corners([bb])[0]) for bb in bb_pred])
+    pred_gdf.columns = ['LST_diff', 'geometry']
+
+    # add centre points
+    pred_gdf['centre_points'] = [pred_gdf.geometry[i].centroid.wkt for i in np.arange(len(pred_gdf))]
+    pred_gdf.to_file('../../data/predicted_data/Paris/Paris_viz.geojson', driver='GeoJSON')
 
     return y_pred
 
