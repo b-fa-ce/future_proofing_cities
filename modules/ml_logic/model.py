@@ -28,10 +28,11 @@ def initialize_model(in_shape: tuple) -> Model:
     ### First Convolution & MaxPooling
     model.add(layers.Conv2D(filters = 8, kernel_size= (3,3), input_shape=in_shape, padding = 'same', activation = 'relu'))
     # model.add(layers.MaxPool2D(pool_size = (3, 3)))
-    model.add(layers.Dropout(0.2))
+    # model.add(layers.Dropout(0.2))
 
     ### Second Convolution & MaxPooling
     model.add(layers.Conv2D(16, (2,2), activation = 'relu'))
+    model.add(layers.Dropout(0.5))
 
     # if in_shape[2] >= 12:
     #     model.add(layers.AveragePooling2D(pool_size = (2,2)))
@@ -39,7 +40,7 @@ def initialize_model(in_shape: tuple) -> Model:
     ### Second Convolution & MaxPooling
     model.add(layers.Conv2D(32, (2,2), activation = 'relu'))
     # model.add(layers.MaxPool2D(pool_size = (2,2)))
-    model.add(layers.Dropout(0.2))
+    model.add(layers.Dropout(0.5))
     # model.add(layers.AveragePooling2D(pool_size = (2,2)))
 
     # if in_shape[2] >= 12:
@@ -51,7 +52,7 @@ def initialize_model(in_shape: tuple) -> Model:
 
     ### One Fully Connected layer - "Fully Connected" is equivalent to saying "Dense"
     model.add(layers.Dense(10, activation = 'relu'))
-    model.add(layers.Dropout(0.2))
+    model.add(layers.Dropout(0.5))
 
     # add more here?
     # model.add(layers.Dense(32, activation = 'relu'))
@@ -72,7 +73,7 @@ def grid_search_params():
 
 
 
-def compile_model(model: Model, learning_rate: float = 0.01) -> Model:
+def compile_model(model: Model, learning_rate: float = 0.001) -> Model:
     """
     compiles model
     """
@@ -87,8 +88,8 @@ def compile_model(model: Model, learning_rate: float = 0.01) -> Model:
 def train_model(model: Model,
                 X: np.ndarray,
                 y: np.ndarray,
-                batch_size=32,
-                patience=10,
+                batch_size=16,
+                patience=15,
                 validation_split=0.3,
                 validation_data=None) -> Tuple[Model, dict]:
     """
