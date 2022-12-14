@@ -440,12 +440,21 @@ def get_inputs_from_df(df, num_px_lon: int, num_px_lat:int):
     """
     df_preprocessed = preprocess_features(df)
     dfs = get_useful_strips(df_preprocessed)
+
     data_tensors = []
+    bb_box_tensors = []
     for df in dfs:
-        data_tensors.append(get_sub_tiles(df, num_px_lon, num_px_lat)[0])
+        data_tiles, coord_bb = get_sub_tiles(df, num_px_lon, num_px_lat)
+        data_tensors.append(data_tiles)
+        bb_box_tensors.append(coord_bb)
+
     tensor_tuple = tuple(tensor for tensor in data_tensors)
-    joined = np.concatenate((tensor_tuple), axis=0)
-    return joined
+    bb_boxes = tuple(coords for coords in bb_box_tensors)
+
+    joined_data = np.concatenate((tensor_tuple), axis=0)
+    joined_bb = np.concatenate((bb_boxes), axis=0)
+
+    return joined_data, joined_bb
 
 
 if __name__ == '__main__':
