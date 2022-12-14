@@ -33,18 +33,18 @@ def initialize_model(in_shape: tuple) -> Model:
     ### Second Convolution & MaxPooling
     model.add(layers.Conv2D(16, (2,2), activation = 'relu'))
 
-    if in_shape[2] >= 12:
-        model.add(layers.AveragePooling2D(pool_size = (2,2)))
+    # if in_shape[2] >= 12:
+    #     model.add(layers.AveragePooling2D(pool_size = (2,2)))
 
     ### Second Convolution & MaxPooling
     model.add(layers.Conv2D(32, (2,2), activation = 'relu'))
     # model.add(layers.MaxPool2D(pool_size = (2,2)))
     model.add(layers.Dropout(0.2))
-    model.add(layers.AveragePooling2D(pool_size = (2,2)))
+    # model.add(layers.AveragePooling2D(pool_size = (2,2)))
 
-    if in_shape[2] >= 12:
-        model.add(layers.AveragePooling2D(pool_size = (2,2)))
-        model.add(layers.Conv2D(4, (2,2), activation = 'relu'))
+    # if in_shape[2] >= 12:
+    #     model.add(layers.AveragePooling2D(pool_size = (2,2)))
+    #     model.add(layers.Conv2D(4, (2,2), activation = 'relu'))
 
     ### Flattening
     model.add(layers.Flatten())
