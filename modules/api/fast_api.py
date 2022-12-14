@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
 
 import pandas as pd
 
@@ -9,8 +10,15 @@ from modules.data_aggregation.params import CITY_BOUNDING_BOXES
 from modules.interface.main import pred
 
 app = FastAPI()
-app.state.model = load_model()
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 @app.get("/predict_city")
 def predict(city: str  # Paris, London, Berlin Brussels

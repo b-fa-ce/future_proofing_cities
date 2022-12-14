@@ -1,7 +1,11 @@
-# FROM python:3.10.8-slim
-FROM tensorflow/tensorflow:2.10.0
+FROM tensorflow/tensorflow:2.11.0
 
 COPY modules /modules
+COPY data/training_outputs /data/training_outputs
+COPY data/predicted_data/Paris /data/predicted_data/Paris
+COPY data/processed_data/Paris/Paris_full.csv /data/processed_data/Paris/Paris_full.csv
+
+
 COPY requirements_prod.txt /requirements.txt
 COPY setup.py /setup.py
 COPY README.md /README.md

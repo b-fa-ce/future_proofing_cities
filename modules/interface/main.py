@@ -16,17 +16,16 @@ import os
 TILE_SIZE_LAT = int(os.path.expanduser(os.environ.get("TILE_SIZE_LAT")))
 TILE_SIZE_LON = int(os.path.expanduser(os.environ.get("TILE_SIZE_LON")))
 
+LEARNING_RATE = float(os.path.expanduser(os.environ.get("LEARNING_RATE")))
+PATIENCE = int(os.path.expanduser(os.environ.get("PATIENCE")))
+BATCH_SIZE = int(os.path.expanduser(os.environ.get("BATCH_SIZE")))
+
 
 
 def train(city: str):
     """
     train a new model with preprocessed dataset
     """
-
-    # General constant variables
-    LEARNING_RATE = 0.002
-    PATIENCE = 10
-    BATCH_SIZE = 25
 
     # import data & convert to tensor
     data_array = get_data(city,
@@ -109,9 +108,11 @@ def pred(city: str) -> np.ndarray:
     Make a prediction using the trained model and saving
     the resulting geojson to disk
     """
+    # output path for predicted data
+    PRED_PATH = f'../../data/predicted_data/{city}/{city}_viz.geojson'
 
+    # prediction data
     data_pred, bb_pred = get_data(city.title(), TILE_SIZE_LON, TILE_SIZE_LAT)
-
     X_pred = data_pred[:,:,:,1:].astype('float64')
 
     if X_pred is None:
@@ -123,7 +124,7 @@ def pred(city: str) -> np.ndarray:
     # predict
     y_pred = model.predict(X_pred)
 
-    print("\n✅ prediction done: ", y_pred, y_pred.shape)
+    print("\n✅ prediction done: number of tiles", y_pred.shape)
 
     # create gdf
     pred_gdf = geopandas.GeoDataFrame(y_pred, geometry = [Polygon(get_corners([bb])[0]) for bb in bb_pred])
@@ -131,18 +132,15 @@ def pred(city: str) -> np.ndarray:
 
     # add centre points
     pred_gdf['centre_points'] = [pred_gdf.geometry[i].centroid.wkt for i in np.arange(len(pred_gdf))]
-    pred_gdf.to_file('../../data/predicted_data/Paris/Paris_viz.geojson', driver='GeoJSON')
 
-    return y_pred
+    # generalise file path
+    pred_gdf.to_file(PRED_PATH, driver='GeoJSON')
+
+    # return y_pred
+    return {'city': city, 'mean_temperature_difference': float(np.mean(y_pred)), 'output_path': PRED_PATH}
 
 
 if __name__ == '__main__':
     # train model on Paris
     train("Paris")
     # how to train test split??
-
-    # load new data
-    data_array = get_data(city,
-                        preprocess = True,
-                        tile_size_lon = TILE_SIZE_LON,
-                        tile_size_lat = TILE_SIZE_LAT)[0]
