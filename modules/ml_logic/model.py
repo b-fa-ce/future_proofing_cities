@@ -31,15 +31,20 @@ def initialize_model(in_shape: tuple) -> Model:
     model.add(layers.Dropout(0.2))
 
     ### Second Convolution & MaxPooling
-    model.add(layers.Conv2D(16, (3,3), activation = 'relu'))
-    model.add(layers.MaxPool2D(pool_size = (2,2)))
-    model.add(layers.Dropout(0.2))
+    model.add(layers.Conv2D(16, (2,2), activation = 'relu'))
+
+    if in_shape[2] >= 12:
+        model.add(layers.AveragePooling2D(pool_size = (2,2)))
 
     ### Second Convolution & MaxPooling
-    # make sure thate size is small enough
     model.add(layers.Conv2D(32, (2,2), activation = 'relu'))
     # model.add(layers.MaxPool2D(pool_size = (2,2)))
     model.add(layers.Dropout(0.2))
+    model.add(layers.AveragePooling2D(pool_size = (2,2)))
+
+    if in_shape[2] >= 12:
+        model.add(layers.AveragePooling2D(pool_size = (2,2)))
+        model.add(layers.Conv2D(4, (2,2), activation = 'relu'))
 
     ### Flattening
     model.add(layers.Flatten())
@@ -73,7 +78,7 @@ def compile_model(model: Model, learning_rate: float = 0.01) -> Model:
     """
 
     optimizer = optimizers.Adam(learning_rate=learning_rate)
-    model.compile(loss="mse", optimizer=optimizer, metrics=["mae"])
+    model.compile(loss="huber", optimizer=optimizer, metrics=["mae"])
 
     print("\n✅ model compiled")
     return model
