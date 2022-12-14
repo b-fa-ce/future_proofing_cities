@@ -225,21 +225,21 @@ def get_sub_tiles(data: pd.DataFrame, num_px_lon: int, num_px_lat:int):
     and subtile bb coords in [[lon_min, lon_max], [lat_min, lat_max]]
     """
 
-    # reduce size of df
-    if 'geometry' in data.columns:
-        df_red = data.drop(columns=['LST', 'ele','ll_corner', 'ur_corner', 'lr_corner','bb', 'geometry'])
-    else:
-        df_red = data.drop(columns=['LST', 'ele','ll_corner', 'ur_corner', 'lr_corner','bb'])
+    # # reduce size of df
+    # if 'geometry' in data.columns:
+    #     df_red = data.drop(columns=['LST', 'ele','ll_corner', 'ur_corner', 'lr_corner','bb', 'geometry'])
+    # else:
+    #     df_red = data.drop(columns=['LST', 'ele','ll_corner', 'ur_corner', 'lr_corner','bb'])
 
-    # convert str to list
-    df_red['ul_corner'] = df_red.ul_corner.apply(literal_eval)
+    # # convert str to list
+    # df_red['ul_corner'] = df_red.ul_corner.apply(literal_eval)
 
-    # separate into lat and lon
-    df_red['lon'] = np.array([row[0] for row in df_red.ul_corner])[:,0]
-    df_red['lat'] = np.array([row[0] for row in df_red.ul_corner])[:,1]
+    # # separate into lat and lon
+    # df_red['lon'] = np.array([row[0] for row in df_red.ul_corner])[:,0]
+    # df_red['lat'] = np.array([row[0] for row in df_red.ul_corner])[:,1]
 
     # set lon, lat as index and unstack
-    data_coord_array = df_red.set_index(['lon', 'lat']).unstack().sort_index()
+    data_coord_array = data.set_index(['lon', 'lat']).unstack().sort_index()
     data_array = data_coord_array.drop(columns = 'ul_corner').values
     coord_array = data_coord_array['ul_corner'].values
 
@@ -248,7 +248,7 @@ def get_sub_tiles(data: pd.DataFrame, num_px_lon: int, num_px_lat:int):
     ###################################################
 
     # split data array
-    number_features = len(df_red.columns)-3 # minus lat, lon, ul_corner
+    number_features = len(data.columns)-3 # minus lat, lon, ul_corner
     split_index_data = int(get_split_indices(data_array[0], number_features))
 
     # transform data_array
@@ -444,6 +444,7 @@ def get_useful_strips(df):
     dfs = []
     for i in range(len(lat_ranges)+1):
         if i == 0:
+            df = df_red[df_red['lat'] <= lat_ranges[i][0]]
             dfs.append(df_red[df_red['lat'] <= lat_ranges[i][0]])
         elif i == len(lat_ranges):
             dfs.append(df_red[df_red['lat'] >= lat_ranges[i-1][1]])
@@ -451,6 +452,20 @@ def get_useful_strips(df):
             dfs.append(df_red[(df_red['lat'] >= lat_ranges[i-1][1]) & (df_red['lat'] <= lat_ranges[i][0])])
 
     return dfs
+
+def preprocess_and_combine_dfs(dfs):
+    """
+    doesn't work generally! Only will for this particular set of building data.
+    Will need tweaking to work otherwise.
+    """
+    preprocessed_dfs = []
+    for df in dfs:
+        preprocessed_dfs.append(preprocess_features(df))
+    data_tensors = []
+    for df in preprocessed_dfs:
+        data_tensors.append(get_sub_tiles(df, 6, 6)[0])
+    joined = np.concatenate((data_tensors[0], data_tensors[1], data_tensors[2], data_tensors[3], data_tensors[4]), axis=0)
+    return joined
 
 
 if __name__ == '__main__':
