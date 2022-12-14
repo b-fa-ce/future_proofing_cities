@@ -1,0 +1,18 @@
+# do not include jupyter notebooks
+*/notebooks*
+*/tests*
+*/powerplant.egg-info*
+**/logfile.log
+*/logfile.log
+
+**/.git
+**/.gitignore
+**/.vscode
+**/coverage
+**/.env
+**/.aws
+**/.ssh
+*docker-compose.yml
+**/.DS_Store
+**/venv
+**/env

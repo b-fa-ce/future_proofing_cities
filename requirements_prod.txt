@@ -1,0 +1,27 @@
+python-dotenv
+numpy
+pandas
+scikit-learn
+
+# coloring
+colorama
+
+# satellite data
+mpmath
+Shapely==1.8.4
+geopandas
+h5py
+contextily
+
+# OSM data
+ohsome==0.1.0
+
+
+# gridding
+pyresample
+pyproj
+
+
+# API
+fastapi
+uvicorn
