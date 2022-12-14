@@ -75,9 +75,9 @@ def evaluate(city: pd.DataFrame):
     Evaluate the performance of the latest production model on new data
     """
     # import data & convert to tensor
-    data_array = get_data(city,
-                          tile_size_lon = TILE_SIZE_LON,
-                          tile_size_lat = TILE_SIZE_LAT)[0]
+    data_array =  get_data(city.title(), TILE_SIZE_LON, TILE_SIZE_LAT)[0]
+
+
 
     # features and target
     X = data_array[:,:,:,1:].astype('float64')
@@ -106,7 +106,8 @@ def evaluate(city: pd.DataFrame):
 
 def pred(city: str) -> np.ndarray:
     """
-    Make a prediction using the trained model
+    Make a prediction using the trained model and saving
+    the resulting geojson to disk
     """
 
     data_pred, bb_pred = get_data(city.title(), TILE_SIZE_LON, TILE_SIZE_LAT)
