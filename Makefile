@@ -21,3 +21,33 @@ run_api:
 
 test:
 	@pytest -v tests
+
+
+#################### TESTS #####################
+
+test_cloud_training: test_gcp_setup test_gcp_project test_gcp_bucket test_big_query test_cloud_data
+
+test_gcp_setup:
+	@TEST_ENV=development pytest \
+	tests/setup/test_gcp_setup.py::TestGcpSetup::test_setup_key_env \
+	tests/setup/test_gcp_setup.py::TestGcpSetup::test_setup_key_path \
+	tests/setup/test_gcp_setup.py::TestGcpSetup::test_code_get_project
+
+test_gcp_project:
+	@TEST_ENV=development pytest \
+	tests/setup/test_gcp_setup.py::TestGcpSetup::test_setup_project_id
+
+test_gcp_bucket:
+	@TEST_ENV=development pytest \
+	tests/setup/test_gcp_setup.py::TestGcpSetup::test_setup_bucket_exists \
+	tests/setup/test_gcp_setup.py::TestGcpSetup::test_setup_bucket_name
+
+test_big_query:
+	@TEST_ENV=development pytest \
+	tests/cloud_data/test_cloud_data.py::TestCloudData::test_big_query_dataset_variable_exists \
+	tests/cloud_data/test_cloud_data.py::TestCloudData::test_cloud_data_create_dataset \
+	tests/cloud_data/test_cloud_data.py::TestCloudData::test_cloud_data_create_table \
+	tests/cloud_data/test_cloud_data.py::TestCloudData::test_cloud_data_table_content
+
+test_cloud_data:
+	@TEST_ENV=development pytest tests/cloud_data/test_cloud_data.py::TestCloudData::test_cloud_data_bq_chunks
