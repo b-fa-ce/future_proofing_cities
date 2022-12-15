@@ -40,7 +40,7 @@ def initialize_model(n: tuple) -> Model:
     model.add(layers.Dense(1, activation = 'linear'))
 
     ### Model compilation
-    model.compile(loss='mse', optimizer = 'adam', metrics = ['mae'])
+    #model.compile(loss='mse', optimizer = 'adam', metrics = ['mae'])
 
     return model
 

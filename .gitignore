@@ -1,16 +1,27 @@
 raw_data/
+data/processed_data/Paris/processed_landuse
+data/processed_data/Berlin/processed_landuse
 notebooks/
 ohsome_api/test.ipynb
 ohsome_api/paris.ipynb
-test.ipynb
+
 data/
 
 preprocessing.egg-info/
 __pycache__
 *.ipynb_checkpoints
 .DS_Store
+.env
 
+#Berlin landuse data
+config.yml
+landuse_berlin.gml
+landuse_berlin.gfs
+str
 # notebooks
 notebooks_gridding.ipynb
 ohsome_api/test.ipynb
 ohsome_api/paris.ipynb
+building_data_test.ipynb
+test.ipynb
+building_data_temp.ipynb
