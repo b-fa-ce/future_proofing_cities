@@ -24,25 +24,53 @@ def save_model(model: Model = None,
 
     print(Fore.BLUE + "\nSave model to local disk..." + Style.RESET_ALL)
 
+
+    # check if folder exists and otherwise create it
+    if not os.path.exists(LOCAL_REGISTRY_PATH):
+        os.makedirs(LOCAL_REGISTRY_PATH)
+
     # save params
     if params is not None:
-        params_path = os.path.join(LOCAL_REGISTRY_PATH, "params", timestamp + ".pickle")
-        print(f"- params path: {params_path}")
-        with open(params_path, "wb") as file:
+
+        params_path = os.path.join(LOCAL_REGISTRY_PATH, "params")
+
+        # check if folder existsand otherwise create it
+        if not os.path.exists(params_path):
+           os.makedirs(params_path)
+
+        # save params to file
+        params_file_path = os.path.join(params_path, timestamp + ".pickle")
+        print(f"- params path: {params_file_path}")
+        with open(params_file_path, "wb") as file:
             pickle.dump(params, file)
 
     # save metrics
     if metrics is not None:
-        metrics_path = os.path.join(LOCAL_REGISTRY_PATH, "metrics", timestamp + ".pickle")
-        print(f"- metrics path: {metrics_path}")
-        with open(metrics_path, "wb") as file:
+
+        metrics_path = os.path.join(LOCAL_REGISTRY_PATH, "metrics")
+
+        # check if folder existsand otherwise create it
+        if not os.path.exists(metrics_path):
+           os.makedirs(metrics_path)
+
+        metrics_file_path = os.path.join(metrics_path, timestamp + ".pickle")
+        print(f"- metrics path: {metrics_file_path}")
+        with open(metrics_file_path, "wb") as file:
             pickle.dump(metrics, file)
 
     # save model
     if model is not None:
-        model_path = os.path.join(LOCAL_REGISTRY_PATH, "models", timestamp)
-        print(f"- model path: {model_path}")
-        model.save(model_path)
+
+        model_path = os.path.join(LOCAL_REGISTRY_PATH, "models")
+
+        # check if folder existsand otherwise create it
+        if not os.path.exists(model_path):
+           os.makedirs(model_path)
+
+
+        model_file_path = os.path.join(model_path, timestamp)
+        print(f"- model path: {model_file_path}")
+        model.save(model_file_path)
 
     print("\n✅ data saved locally")
 
