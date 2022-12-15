@@ -68,10 +68,6 @@ def initialize_model(in_shape: tuple) -> Model:
     return model
 
 
-def grid_search_params():
-    pass
-
-
 
 def compile_model(model: Model, learning_rate: float = 0.001) -> Model:
     """
