@@ -105,6 +105,8 @@ websocket-client==1.4.2
 wrapt==1.14.1
 wfs-downloader
 
+# coloring
+colorama
 
 # satellite data
 mpmath
@@ -119,3 +121,7 @@ pyproj
 
 # learning
 tensorflow
+
+# api
+fastapi
+uvicorn

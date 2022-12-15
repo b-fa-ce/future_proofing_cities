@@ -1,4 +1,6 @@
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from colorama import Fore, Style
+
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.compose import ColumnTransformer
 
 import pandas as pd
@@ -25,38 +27,65 @@ def create_features_preprocessor() -> ColumnTransformer:
 
     # instantiate scalers
     standard = StandardScaler()
+    robust = RobustScaler()
     minmax = MinMaxScaler()
 
     # COMBINED PREPROCESSOR
     preprocessor = ColumnTransformer(
         [
-            ("building_height_scaler", standard, ['building_height']),
-            ("elevation_scaler", minmax, ['ele']),
+            ("building_height_scaler", robust, ['av_building_height']),
+            ("building_density_scaler", robust, ['building_coverage']),
+            ("elevation_scaler", minmax, ['ele_diff']),
         ],
+        remainder='passthrough',
         n_jobs=-1,
     )
 
     return preprocessor
 
 
-def train_preprocess_features(X: pd.DataFrame):
+def preprocess_features(X: pd.DataFrame):
     """
     returns fitted preprocessor
     use on X_train only
     """
+    print(Fore.BLUE + "\nPreprocess features..." + Style.RESET_ALL)
+
     # instantiate preproecessor
     preprocessor = create_features_preprocessor()
-    preprocessor.fit(X)
+    X_processed = preprocessor.fit_transform(X)
 
-    return preprocessor
+    col_names = preprocessor.get_feature_names_out()
 
-def preprocess_features(X: pd.DataFrame, preprocessor) -> np.array:
+    col_names = [name.replace('remainder__','').\
+                replace('building_height_scaler__','').\
+                replace('building_density_scaler__','').\
+                replace('elevation_scaler__','') for name in col_names]
+
+    df_processed = pd.DataFrame(X_processed, columns=col_names)
+
+    # shift column 'Name' to first position
+    first_column = df_processed.pop('LST_diff')
+
+    # insert column using insert(position,column_name,
+    # first_column) function
+    df_processed.insert(0, 'LST_diff', first_column)
+
+    return df_processed
+
+
+def preprocess_features_transform_only(X: pd.DataFrame, preprocessor) -> np.array:
     """
     returns preprocessed features
     use on X_train, X_val and X_test separately
     """
+    print(Fore.BLUE + "\nPreprocess features..." + Style.RESET_ALL)
 
-    return preprocessor.transform(X)
+    X_processed = preprocessor.transform(X)
+
+    print("\n✅ X_processed, with shape", X_processed.shape)
+
+    return X_processed
 
 
 # if __name__ == '__main__':
