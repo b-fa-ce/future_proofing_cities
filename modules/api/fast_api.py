@@ -29,7 +29,6 @@ def predict(city: str  # Paris, London, Berlin Brussels
     """
 
     output_dict = pred(city)
-    print(output_dict)
 
     return output_dict
 

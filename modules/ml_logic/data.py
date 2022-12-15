@@ -16,6 +16,11 @@ def get_data(city:str,
     """
 
     path = os.path.join(INPUT_PATH,city,f'{city}_full.csv')
+
+    if not os.path.exists(path):
+        print(f'❌ Data for {city} does not exist -> Please place it in {path}.')
+        raise
+
     df = pd.read_csv(path)
 
     # divide into tiles and convert to numpy array

@@ -20,6 +20,8 @@ LEARNING_RATE = float(os.path.expanduser(os.environ.get("LEARNING_RATE")))
 PATIENCE = int(os.path.expanduser(os.environ.get("PATIENCE")))
 BATCH_SIZE = int(os.path.expanduser(os.environ.get("BATCH_SIZE")))
 
+PRED_PATH = os.path.expanduser(os.environ.get("PRED_PATH"))
+
 
 
 def train(city: str):
@@ -82,8 +84,12 @@ def evaluate(city: pd.DataFrame):
     X = data_array[:,:,:,1:].astype('float64')
     y = get_average_temperature_per_tile(data_array, 0)
 
-
+    # load model
     model = load_model()
+
+    if model == None:
+        print("\n❌ Model non-existent -> train model first")
+        raise
 
     metrics_dict = evaluate_model(model=model, X=X, y=y)
     mae = metrics_dict["mae"]
@@ -108,8 +114,12 @@ def pred(city: str) -> np.ndarray:
     Make a prediction using the trained model and saving
     the resulting geojson to disk
     """
+
     # output path for predicted data
-    PRED_PATH = f'../../data/predicted_data/{city}/{city}_viz.geojson'
+    pred_path_city = os.path.join(PRED_PATH,city)
+
+    if not os.path.exists(pred_path_city):
+        os.makedirs(pred_path_city)
 
     # prediction data
     data_pred, bb_pred = get_data(city.title(), TILE_SIZE_LON, TILE_SIZE_LAT)
@@ -120,6 +130,10 @@ def pred(city: str) -> np.ndarray:
 
     # load model
     model = load_model()
+
+    if model == None:
+        print("\n❌ Model non-existent -> train model first")
+        raise
 
     # predict
     y_pred = model.predict(X_pred)
@@ -134,13 +148,13 @@ def pred(city: str) -> np.ndarray:
     pred_gdf['centre_points'] = [pred_gdf.geometry[i].centroid.wkt for i in np.arange(len(pred_gdf))]
 
     # generalise file path
-    pred_gdf.to_file(PRED_PATH, driver='GeoJSON')
+    pred_path_city_gdf = os.path.join(pred_path_city, f'{city}_viz.geojson')
+    pred_gdf.to_file(pred_path_city_gdf, driver='GeoJSON')
 
     # return y_pred
-    return {'city': city, 'mean_temperature_difference': float(np.mean(y_pred)), 'output_path': PRED_PATH}
+    return  {'city': city, 'mean_temperature_difference': float(np.mean(y_pred)), 'output_path': PRED_PATH, 'gdf': pred_gdf.to_json()}
 
 
 if __name__ == '__main__':
     # train model on Paris
     train("Paris")
-    # how to train test split??
