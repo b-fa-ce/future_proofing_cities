@@ -28,7 +28,7 @@ def initialize_model(in_shape: tuple) -> Model:
     ### First Convolution & MaxPooling
     model.add(layers.Conv2D(filters = 8, kernel_size= (3,3), input_shape=in_shape, padding = 'same', activation = 'relu'))
     # model.add(layers.MaxPool2D(pool_size = (3, 3)))
-    # model.add(layers.Dropout(0.2))
+    model.add(layers.Dropout(0.2))
 
     ### Second Convolution & MaxPooling
     model.add(layers.Conv2D(16, (2,2), activation = 'relu'))
@@ -75,7 +75,7 @@ def compile_model(model: Model, learning_rate: float = 0.001) -> Model:
     """
 
     optimizer = optimizers.Adam(learning_rate=learning_rate)
-    model.compile(loss="huber", optimizer=optimizer, metrics=["mae"])
+    model.compile(loss="huber", optimizer=optimizer, metrics=["mae", 'mse'])
 
     print("\n✅ model compiled")
     return model
@@ -137,9 +137,11 @@ def evaluate_model(model: Model,
 
     loss = metrics["loss"]
     mae = metrics["mae"]
-    mae_baseline = np.sum(y**2)/len(y)
+    mse = metrics['mse']
+    mae_baseline = np.sum(np.abs(y))/len(y)
+    mse_baseline = np.sum(y**2)/len(y)
 
-    print(f"\n✅ model evaluated: loss {round(loss, 2)}, mae {round(mae, 2)}, baseline mae: {mae_baseline}")
+    print(f"\n✅ model evaluated: loss {round(loss, 2)}, mae {round(mae, 2)}, mse: {mse}, baseline mae: {mae_baseline}, baseline mse: {mse_baseline}")
 
     return metrics
 
