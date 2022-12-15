@@ -152,10 +152,9 @@ def pred(city: str) -> np.ndarray:
     pred_gdf.to_file(pred_path_city_gdf, driver='GeoJSON')
 
     # return y_pred
-    return {'city': city, 'mean_temperature_difference': float(np.mean(y_pred)), 'output_path': PRED_PATH}
+    return  {'city': city, 'mean_temperature_difference': float(np.mean(y_pred)), 'output_path': PRED_PATH, 'gdf': pred_gdf.to_json()}
 
 
 if __name__ == '__main__':
     # train model on Paris
     train("Paris")
-    # how to train test split??
