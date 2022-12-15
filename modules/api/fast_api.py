@@ -1,20 +1,24 @@
 from fastapi import FastAPI
 import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
 
 import pandas as pd
 
 from modules.ml_logic.registry import load_model
 from modules.ml_logic.preprocessing import preprocess_features
 from modules.data_aggregation.params import CITY_BOUNDING_BOXES
-from modules.ml_logic.data import get_data
+from modules.interface.main import pred
 
 app = FastAPI()
-# app.state.model = load_model()
 
-# General constant variables
-TILE_SIZE_LAT = 6 # size of 6 pxs
-TILE_SIZE_LON = 6 # size of 6 pxs
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 @app.get("/predict_city")
 def predict(city: str  # Paris, London, Berlin Brussels
@@ -24,16 +28,10 @@ def predict(city: str  # Paris, London, Berlin Brussels
     API GET endpoint to obtain heat distribution of given city
     """
 
-    # data, bb = get_data(city,
-    #                     preprocess= True,
-    #                     tile_size_lon =  TILE_SIZE_LON,
-    #                     tile_size_lat =  TILE_SIZE_LAT)
+    output_dict = pred(city)
+    print(output_dict)
 
-    # X_pred = data[:,:,:,1:].astype('float64')
-
-    # temp_pred = app.state.model.predict(X_pred)
-
-    return {'temp': city}# temp_pred}
+    return output_dict
 
 
 @app.get("/")

@@ -9,6 +9,7 @@ from tensorflow.keras import Model, models
 
 
 LOCAL_REGISTRY_PATH = os.path.expanduser(os.environ.get("LOCAL_REGISTRY_PATH"))
+DOCKER_REGISTRY_PATH = os.path.expanduser(os.environ.get("DOCKER_REGISTRY_PATH"))
 
 
 def save_model(model: Model = None,
@@ -48,7 +49,7 @@ def save_model(model: Model = None,
     return None
 
 
-def load_model(save_copy_locally=False) -> Model:
+def load_model() -> Model:
     """
     load the latest saved model, return None if no model found
     """
@@ -56,7 +57,7 @@ def load_model(save_copy_locally=False) -> Model:
     print(Fore.BLUE + "\nLoad model from local disk..." + Style.RESET_ALL)
 
     # get latest model version
-    model_directory = os.path.join(LOCAL_REGISTRY_PATH, "models")
+    model_directory = os.path.join(DOCKER_REGISTRY_PATH, "models")
 
     results = glob.glob(f"{model_directory}/*")
     if not results:
