@@ -122,7 +122,7 @@ def pred(city: str) -> np.ndarray:
         os.makedirs(pred_path_city)
 
     # prediction data
-    data_pred, bb_pred = get_data(city.title(), TILE_SIZE_LON, TILE_SIZE_LAT)
+    data_pred, bb_pred = get_data(city=city.title(), tile_size_lon=TILE_SIZE_LON, tile_size_lat=TILE_SIZE_LAT, context='predict')
     X_pred = data_pred[:,:,:,1:].astype('float64')
 
     if X_pred is None:
