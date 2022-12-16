@@ -231,9 +231,7 @@ def get_clipped_polygon_area(polygon_coords, clip, pixel):
     """
     clipped = clip(polygon_coords, pixel)
     if len(clipped) == 0:
-
-        return None
-
+        return False
     pgon = Polygon(clipped)
     area = pgon.area
     return area
@@ -393,6 +391,7 @@ def get_full_coverage_and_height(buildings, clip, pixel, padding_distance):
     return prop_area_built, average_height
 
 def get_pd_series_full_coverage_height(row):
+    """
 
     This functions requires all building data to be saved as 'paris_buildings',
     and a clipper saved as clip (USE MODIFIED CLIPPER),

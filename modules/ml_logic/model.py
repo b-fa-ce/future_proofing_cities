@@ -65,7 +65,6 @@ def initialize_model(in_shape: tuple) -> Model:
 
 
 
-
 def compile_model(model: Model, learning_rate: float = 0.001) -> Model:
     """
     compiles model
