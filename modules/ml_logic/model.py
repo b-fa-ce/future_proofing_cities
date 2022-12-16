@@ -8,12 +8,6 @@ from tensorflow.keras import Sequential, Model, optimizers
 from tensorflow.keras.callbacks import EarlyStopping
 
 
-from sklearn.pipeline import make_pipeline
-from sklearn.compose import ColumnTransformer, make_column_selector
-from sklearn.model_selection import cross_val_score, GridSearchCV
-
-from modules.data_aggregation.params import CITY_BOUNDING_BOXES
-from modules.ml_logic.utils import slice_picture_coords
 
 
 
@@ -62,6 +56,8 @@ def initialize_model(in_shape: tuple) -> Model:
 
     ### Last layer - Regression layer with one output, the prediction
     model.add(layers.Dense(1, activation = 'linear'))
+
+
 
     print("\n✅ model initialised")
 

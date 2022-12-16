@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from ast import literal_eval
 import os
+import random
 
 from modules.data_aggregation.params import CITY_BOUNDING_BOXES
 from modules.ml_logic.preprocessing import preprocess_features
@@ -387,26 +388,65 @@ def get_useful_strips(df):
 
     return dfs
 
+# def old_get_inputs_from_df(df, num_px_lon: int, num_px_lat:int):
+#     """
+#     Takes a df and returns the tensors that can be fed into the model.
+#     First preprocesses, then divides the dataframe into several dataframes
+#     consisting of the useful strips of the building data. Then it gets the
+#     sub tiles for each of those dataframes and joins them together after.
+
+#     For future reference: The preprocessing is done in parts, which means the
+#     standard scaling is done separately for each useful strip. Would be better
+#     if they were joined together, scaled as one, then separated again based on
+#     the indexes of the original strips.
+#     """
+#     dfs = get_useful_strips(df)
+#     df_preprocessed = []
+#     for df in dfs:
+#         df_preprocessed.append(preprocess_features(df))
+
+#     data_tensors = []
+#     bb_box_tensors = []
+#     for df in df_preprocessed:
+#         data_tiles, coord_bb = get_sub_tiles(df, num_px_lon, num_px_lat)
+#         data_tensors.append(data_tiles)
+#         bb_box_tensors.append(coord_bb)
+
+#     tensor_tuple = tuple(tensor for tensor in data_tensors)
+#     bb_boxes = tuple(coords for coords in bb_box_tensors)
+#     joined_data = np.concatenate((tensor_tuple), axis=0)
+#     joined_bb = np.concatenate((bb_boxes), axis=0)
+
+#     return joined_data, joined_bb
+
 def get_inputs_from_df(df, num_px_lon: int, num_px_lat:int):
     """
+    ADJUSTED TO DO PREPROCESSING COMBINED
+
     Takes a df and returns the tensors that can be fed into the model.
     First preprocesses, then divides the dataframe into several dataframes
     consisting of the useful strips of the building data. Then it gets the
     sub tiles for each of those dataframes and joins them together after.
-
-    For future reference: The preprocessing is done in parts, which means the
-    standard scaling is done separately for each useful strip. Would be better
-    if they were joined together, scaled as one, then separated again based on
-    the indexes of the original strips.
     """
     dfs = get_useful_strips(df)
-    df_preprocessed = []
-    for df in dfs:
-        df_preprocessed.append(preprocess_features(df))
+    lengths = [len(df) for df in dfs]
+    merged_df = pd.concat(dfs, ignore_index=False)
+    df_preprocessed = preprocess_features(merged_df)
+    split_dfs = []
+    start = 0
+    for i in range(len(lengths)):
+        if i == 0:
+            split_dfs.append(df_preprocessed.iloc[:lengths[i]])
+            start += lengths[i]
+        elif i == len(lengths)-1:
+            split_dfs.append(df_preprocessed.iloc[start:])
+        else:
+            split_dfs.append(df_preprocessed.iloc[start:start+lengths[i]])
+            start += lengths[i]
 
     data_tensors = []
     bb_box_tensors = []
-    for df in df_preprocessed:
+    for df in split_dfs:
         data_tiles, coord_bb = get_sub_tiles(df, num_px_lon, num_px_lat)
         data_tensors.append(data_tiles)
         bb_box_tensors.append(coord_bb)
@@ -473,6 +513,54 @@ def get_sub_tiles(data: pd.DataFrame, num_px_lon: int, num_px_lat:int):
 
     return data_tiles, coord_bb
 
+def fill_missing_strips(df):
+    df_red = df.drop(columns=['LST', 'ele','ll_corner', 'ur_corner', 'bb'])
+
+    # convert str to list
+    df_red['ul_corner'] = df_red.ul_corner.apply(literal_eval)
+    df_red['lr_corner'] = df_red.lr_corner.apply(literal_eval)
+
+    # drop irrelevant index
+    if 'Unnamed: 0' in df_red.columns:
+        df_red.drop(columns='Unnamed: 0', inplace=True)
+
+    # get lon, lat of ul corner
+    df_red['lon'] = np.array([row[0] for row in df_red.ul_corner])[:,0]
+    df_red['lat'] = np.array([row[0] for row in df_red.ul_corner])[:,1]
+
+    lat_ranges = get_zero_buildings_lat_range(df_red)
+
+    indexes_of_missig = []
+    mean_density = df['building_coverage'].mean()
+    std_density = df['building_coverage'].std()
+    mean_height = df['av_building_height'].mean()
+    std_height = df['av_building_height'].std()
+
+    for i in range(len(lat_ranges)):
+        indexes_of_empty = (df_red['lat'] > lat_ranges[i][0]) & (df_red['lat'] < lat_ranges[i][1])
+        df_red.loc[indexes_of_empty, 'building_coverage'] = random.uniform(0.0, mean_density*2)
+        df_red.loc[indexes_of_empty, 'av_building_height'] = random.uniform(mean_height-std_height, mean_height+std_height)
+
+    return df_red
+
+def get_imputed_info_from_df(df, num_px_lon: int, num_px_lat:int):
+    """
+    Takes a df and returns the tensors that can be fed into the model.
+    First preprocesses, then divides the dataframe into several dataframes
+    consisting of the useful strips of the building data. Then it gets the
+    sub tiles for each of those dataframes and joins them together after.
+
+    For future reference: The preprocessing is done in parts, which means the
+    standard scaling is done separately for each useful strip. Would be better
+    if they were joined together, scaled as one, then separated again based on
+    the indexes of the original strips.
+    """
+    filled_df = fill_missing_strips(df)
+    df_preprocessed = preprocess_features(filled_df)
+
+    data_tiles, coord_bb = get_sub_tiles(df_preprocessed, num_px_lon, num_px_lat)
+
+    return data_tiles, coord_bb
 
 if __name__ == '__main__':
     city = 'Paris'

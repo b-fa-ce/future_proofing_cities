@@ -3,9 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import mpmath as mp
 import requests
+
 from shapely.geometry import Polygon, Point, MultiPoint
 from modules.data_aggregation.long_lat import pad_pixel
+
 from shapely.geometry import Polygon
+
 
 from modules.data_aggregation.long_lat import pad_pixel
 
@@ -94,8 +97,11 @@ def get_all_tile_jsons(x_tiles, y_tiles, zoom=15):
     city_jsons = {}
     for x in x_tiles:
         for y in y_tiles:
-            tile_lat = tile2lat(zoom, x, y)
-            tile_lon = tile2lon(zoom, x, y)
+
+            tile_lat = tile2lat(zoom, y, x)
+            tile_lon = tile2lon(zoom, y, x)
+
+
             tile = [x, y]
             json_response = osmbuildings_request(tile_lat, tile_lon)
             if json_response == None:
@@ -386,6 +392,7 @@ def get_full_coverage_and_height(buildings, clip, pixel, padding_distance):
 
 def get_pd_series_full_coverage_height(row):
     """
+
     This functions requires all building data to be saved as 'paris_buildings',
     and a clipper saved as clip (USE MODIFIED CLIPPER),
     and can only be used on the paris dataframe from paris.csv when the bb has had

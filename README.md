@@ -1,33 +1,20 @@
-
-Paris: 2.264216,48.813898,2.42172,48.900502
-Berlin: 13.313794,52.475607,13.471299,52.55571
-London: -0.216408,51.469149,-0.058904,51.551072
-Brussels: 4.288857,50.808751,4.446361,50.891855
-=======
-## Cities to look at:
-
-coordinates from: https://geolist.org
+# Future proofing cities
+a two week project with the Le Wagon Data Science & Machine Learning bootcamp
 
 
-**Paris:**
-
-2.264216,48.813898,2.42172,48.900502
-
-**Berlin:**
-
-13.313794,52.475607,13.471299,52.55571
-
-**London:**
-
--0.216408,51.469149,-0.058904,51.551072
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+    <img src="fpc_logo.png" alt="Logo" width="175" height="175">
+  </a>
+</div>
 
 
-**Brussels:**
-
-4.288857,50.808751,4.446361,50.891855
+## Description
 
 
-Paris: 2.264216,48.813898,2.42172,48.900502
-Berlin: 13.313794,52.475607,13.471299,52.55571
-London: -0.216408,51.469149,-0.058904,51.551072
-Brussels: 4.288857,50.808751,4.446361,50.891855
+## Installation & usage
+
+### Using docker
+
+### Streamlit frontend
