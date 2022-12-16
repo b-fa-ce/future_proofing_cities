@@ -57,9 +57,12 @@ def initialize_model(in_shape: tuple) -> Model:
     ### Last layer - Regression layer with one output, the prediction
     model.add(layers.Dense(1, activation = 'linear'))
 
+
+
     print("\n✅ model initialised")
 
     return model
+
 
 
 
