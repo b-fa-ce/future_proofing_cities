@@ -13,7 +13,6 @@ COPY README.md /README.md
 
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
-# RUN pip install .
 
 RUN python setup.py install
 
