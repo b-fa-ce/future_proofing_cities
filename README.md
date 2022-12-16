@@ -49,3 +49,12 @@ modules/ml_logic/model.py
 Our Git Repository which contains the information for the deployment of our user interface:
 
 https://github.com/b-fa-ce/future-proofing-cities-frontend
+
+
+## Project Contributors:
+ - Bruno Faigle-Cedzich
+ - Matt Hall
+ - Afanasis Kiurdzhyiev
+ - Leah Rothschild
+
+Project created and developed in the context of finalising our Data Science & Machine Learning Course with Le Wagon
