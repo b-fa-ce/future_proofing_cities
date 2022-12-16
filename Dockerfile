@@ -2,8 +2,9 @@ FROM tensorflow/tensorflow:2.11.0
 
 COPY modules /modules
 COPY data/training_outputs /data/training_outputs
-COPY data/predicted_data/Paris /data/predicted_data/Paris
+
 COPY data/processed_data/Paris/Paris_full.csv /data/processed_data/Paris/Paris_full.csv
+COPY data/processed_data/Paris/Paris_full.csv /data/processed_data/Berlin/Berlin_full.csv
 
 
 COPY requirements_prod.txt /requirements.txt
