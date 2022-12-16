@@ -1,4 +1,4 @@
-from modules.ml_logic.utils import get_inputs_from_df
+from modules.ml_logic.utils import get_inputs_from_df, get_imputed_info_from_df
 
 import pandas as pd
 import os
@@ -7,7 +7,7 @@ INPUT_PATH = "../../data/processed_data"
 
 
 def get_data(city:str,
-            #  context: str = 'train',
+             context: str = 'train',
              tile_size_lon: int = 6,
              tile_size_lat: int = 6) -> list:
     """
@@ -24,4 +24,7 @@ def get_data(city:str,
     df = pd.read_csv(path)
 
     # divide into tiles and convert to numpy array
-    return get_inputs_from_df(df, tile_size_lon, tile_size_lat)
+    if context == 'train':
+        return get_inputs_from_df(df, tile_size_lon, tile_size_lat)
+    elif context == 'predict':
+        return get_imputed_info_from_df(df, tile_size_lon, tile_size_lat)
