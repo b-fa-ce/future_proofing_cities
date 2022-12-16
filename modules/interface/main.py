@@ -76,7 +76,10 @@ def evaluate(city: pd.DataFrame):
     Evaluate the performance of the latest production model on new data
     """
     # import data & convert to tensor
-    data_array =  get_data(city.title(), TILE_SIZE_LON, TILE_SIZE_LAT)[0]
+    data_array =  get_data(city=city.title(),
+                           tile_size_lon=TILE_SIZE_LON,
+                           tile_size_lat=TILE_SIZE_LAT,
+                           context='train')[0]
 
 
 
