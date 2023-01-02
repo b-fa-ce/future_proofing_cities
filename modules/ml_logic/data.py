@@ -3,7 +3,7 @@ from modules.ml_logic.utils import get_inputs_from_df, get_imputed_info_from_df
 import pandas as pd
 import os
 
-INPUT_PATH = "../../data/processed_data"
+INPUT_PATH = "data/processed_data"
 
 
 def get_data(city:str,
@@ -14,8 +14,10 @@ def get_data(city:str,
     imports data for given city and returns list of
     sub-tiled data-array and bounding box coords
     """
-
-    path = os.path.join(INPUT_PATH,city,f'{city}_full.csv')
+    if context == 'train':
+        path = os.path.join(INPUT_PATH,city,f'{city}_full.csv')
+    else:
+        path = os.path.join('..','..',INPUT_PATH,city,f'{city}_full.csv')
 
     if not os.path.exists(path):
         print(f'❌ Data for {city} does not exist -> Please place it in {path}.')

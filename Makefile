@@ -14,7 +14,7 @@ clean:
 all: install clean
 
 run_train:
-	python -c 'from modules.interface.main import train; train()'
+	python -c 'from modules.interface.main import train; train("Paris")'
 
 run_api:
 	@python modules/api/fast_api.py
