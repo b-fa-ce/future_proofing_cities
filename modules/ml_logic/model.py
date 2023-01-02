@@ -28,18 +28,11 @@ def initialize_model(in_shape: tuple) -> Model:
     model.add(layers.Conv2D(16, (2,2), activation = 'relu'))
     model.add(layers.Dropout(0.5))
 
-    # if in_shape[2] >= 12:
-    #     model.add(layers.AveragePooling2D(pool_size = (2,2)))
 
     ### Second Convolution & MaxPooling
     model.add(layers.Conv2D(32, (2,2), activation = 'relu'))
-    # model.add(layers.MaxPool2D(pool_size = (2,2)))
     model.add(layers.Dropout(0.5))
-    # model.add(layers.AveragePooling2D(pool_size = (2,2)))
 
-    # if in_shape[2] >= 12:
-    #     model.add(layers.AveragePooling2D(pool_size = (2,2)))
-    #     model.add(layers.Conv2D(4, (2,2), activation = 'relu'))
 
     ### Flattening
     model.add(layers.Flatten())
@@ -48,11 +41,6 @@ def initialize_model(in_shape: tuple) -> Model:
     model.add(layers.Dense(10, activation = 'relu'))
     model.add(layers.Dropout(0.5))
 
-    # add more here?
-    # model.add(layers.Dense(32, activation = 'relu'))
-    # model.add(layers.Dropout(0.3))
-    # model.add(layers.Dense(10, activation = 'relu'))
-    # model.add(layers.Dropout(0.3))
 
     ### Last layer - Regression layer with one output, the prediction
     model.add(layers.Dense(1, activation = 'linear'))
@@ -140,17 +128,3 @@ def evaluate_model(model: Model,
     print(f"\n✅ model evaluated: loss {round(loss, 2)}, mae {round(mae, 2)}, mse: {mse}, baseline mae: {mae_baseline}, baseline mse: {mse_baseline}")
 
     return metrics
-
-
-
-
-
-# clustering and finding (next to) nearest neighbours on geographical data
-# cluster analysis
-# output different clusters on map
-# grid search? -> model
-# kmeans ,gaussian mixture → extra feature?
-
-# clustering on target
-
-# CNN -> slice up into smaller images?
