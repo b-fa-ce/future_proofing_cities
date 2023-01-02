@@ -1,5 +1,5 @@
 # Future proofing cities
-a two week project with the Le Wagon Data Science & Machine Learning bootcamp
+a 10 day project with the Le Wagon Data Science & Machine Learning bootcamp
 
 
 <!-- PROJECT LOGO -->
@@ -40,9 +40,35 @@ Target:
 **Model**
 modules/ml_logic/model.py
 
+### Training the model
+
+- Install dependencies
+```
+make install
+```
+
+- Train on Paris data
+```
+make run_train
+```
 
 
-### Using docker
+### Predicting using docker
+
+- Copy content from `.env-sample` to `.env` and update your relevant information
+- Run
+```
+pyenv allow
+```
+- Build docker image
+```
+docker build -t $IMAGE:prod .
+```
+- Run docker image on `port 8000`
+```
+docker run -it -e PORT=8000 -p 8000:8000 --env-file .env $IMAGE:prod
+```
+- Access the `docs` on `localhost:8000/docs`
 
 ### Streamlit frontend
 
